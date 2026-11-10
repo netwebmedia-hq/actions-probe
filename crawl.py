@@ -16,7 +16,7 @@ import requests
 UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36")
 DELAY = float(os.environ.get("DELAY", "0.35"))
-MAX_PAGES, MAX_ASSETS, MAX_LINKS, MAX_SITEMAP, MAX_SUBS = 20, 50, 30, 12, 16
+MAX_PAGES, MAX_ASSETS, MAX_LINKS, MAX_SITEMAP, MAX_SUBS = 15, 30, 30, 10, 16
 HDRS = ["content-type", "content-encoding", "content-length", "cache-control",
         "strict-transport-security", "content-security-policy",
         "x-content-type-options", "referrer-policy", "permissions-policy",
