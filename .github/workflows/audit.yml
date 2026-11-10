@@ -1,7 +1,14 @@
 name: audit
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+    inputs:
+      only:
+        description: Run a single group (a, b or c); empty = all
+        required: false
+        default: ""
 jobs:
   audit:
+    if: ${{ inputs.only == '' || inputs.only == matrix.group }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
     strategy:
@@ -42,7 +49,8 @@ jobs:
               jq '{url: .finalDisplayedUrl,
                    scores: (.categories | map_values(.score)),
                    metrics: {fcp: .audits["first-contentful-paint"].displayValue, lcp: .audits["largest-contentful-paint"].displayValue, tbt: .audits["total-blocking-time"].displayValue, cls: .audits["cumulative-layout-shift"].displayValue, si: .audits["speed-index"].displayValue, bytes: .audits["total-byte-weight"].displayValue},
-                   failing: [.audits[] | select(.score != null and .score < 0.9) | {id, title, score, displayValue, items: ((.details.items // [])[0:6])}]}' lh.json > "out/lighthouse/$name.json"
+                   failing: [.audits[] | select(.score != null and .score < 0.9) | {id, title, score, displayValue, items: ((.details.items // [])[0:6])}],
+                   diag: (["bootup-time","mainthread-work-breakdown","long-tasks","third-party-summary","third-parties-insight"] as $k | [.audits[] | select(.id as $i | $k | index($i)) | {id, displayValue, items: ((.details.items // [])[0:10])}])}' lh.json > "out/lighthouse/$name.json"
               jq -r '"LH \(.url) " + (.scores | to_entries | map("\(.key)=\((.value // 0) * 100 | round)") | join(" "))' "out/lighthouse/$name.json" || true
             fi
             # 360px-wide screenshot after 6 s of page time, to see the consent banner against the CTA
