@@ -1,0 +1,24 @@
+name: crawl
+on:
+  workflow_dispatch:
+    inputs:
+      sites:
+        description: Space-separated hosts (empty = all)
+        required: false
+        default: ""
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install -q requests brotli
+      - run: python3 crawl.py
+        env:
+          SITES: ${{ inputs.sites }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: crawl
+          path: out/
+          retention-days: 3
