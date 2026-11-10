@@ -8,7 +8,6 @@ on:
         default: ""
 jobs:
   audit:
-    if: ${{ inputs.only == '' || inputs.only == matrix.group }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
     strategy:
@@ -29,11 +28,13 @@ jobs:
       - uses: actions/checkout@v4
       - run: pip install -q requests brotli && npm i -g lighthouse@12 > /dev/null 2>&1
       - name: Crawl
+        if: ${{ inputs.only == '' || inputs.only == matrix.group }}
         continue-on-error: true
         run: python3 crawl.py
         env:
           SITES: ${{ matrix.sites }}
       - name: Lighthouse (mobile, one page at a time)
+        if: ${{ inputs.only == '' || inputs.only == matrix.group }}
         env:
           PAGES: ${{ matrix.pages }}
         run: |
@@ -58,7 +59,7 @@ jobs:
             sleep 15
           done
       - uses: actions/upload-artifact@v4
-        if: always()
+        if: ${{ always() && (inputs.only == '' || inputs.only == matrix.group) }}
         with:
           name: audit-${{ matrix.group }}
           path: out/
