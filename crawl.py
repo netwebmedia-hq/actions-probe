@@ -113,8 +113,9 @@ class Site:
         home_url, home_html = home.url, home.text
         self.fetch("meta", urljoin(base, "robots.txt"), save="robots.txt")
         sm = self.fetch("meta", urljoin(base, "sitemap.xml"), save="sitemap.xml")
-        for p in ("zz-nope-404-check", ".git/config", ".env", "composer.json"):
-            self.fetch("probe", urljoin(base, p), save="pages/404.html" if p.startswith("zz") else None)
+        # No /.git/config, /.env or composer.json probes: each is a mod_security 406 and about
+        # ten of them from one IP gets that IP dropped by the host firewall (2026-11-10).
+        self.fetch("probe", urljoin(base, "zz-nope-404-check"), save="pages/404.html")
         for p in NOFOLLOW.get(self.host, []):
             self.fetch("nofollow", urljoin(base, p), follow=False)
 
