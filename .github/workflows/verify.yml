@@ -1,0 +1,10 @@
+name: verify
+on: workflow_dispatch
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install -q requests
+      - run: python3 verify.py
