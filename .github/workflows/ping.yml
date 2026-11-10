@@ -1,0 +1,13 @@
+name: ping
+on: workflow_dispatch
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - run: |
+          UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
+          for h in dongaston.com netwebmedia.com fracmo.ai golferos.com marpolis.com entrepoker.com climalerta.com realiracing.com tapephoto.com; do
+            curl -s -o /dev/null -m 15 -A "$UA" -w "PING $h %{http_code} %{remote_ip} %{time_total}s\n" "https://$h/" || true
+            sleep 2
+          done
