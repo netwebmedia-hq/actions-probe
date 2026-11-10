@@ -1,0 +1,55 @@
+name: audit
+on: workflow_dispatch
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      max-parallel: 1
+      fail-fast: false
+      matrix:
+        include:
+          - group: a
+            sites: "dongaston.com netwebmedia.com fracmo.ai"
+            pages: "https://dongaston.com/ https://dongaston.com/billeterasmart/ https://netwebmedia.com/ https://netwebmedia.com/pricing.html https://fracmo.ai/ https://fracmo.ai/sdr-ia.html"
+          - group: b
+            sites: "golferos.com marpolis.com entrepoker.com"
+            pages: "https://golferos.com/ https://golferos.com/tienda/ https://marpolis.com/ https://marpolis.com/tasacion.html https://entrepoker.com/es/ https://entrepoker.com/es/salas.html"
+          - group: c
+            sites: "climalerta.com realiracing.com tapephoto.com"
+            pages: "https://climalerta.com/ https://climalerta.com/kit-productos.html https://realiracing.com/ https://realiracing.com/gear.html https://tapephoto.com/ https://tapephoto.com/licensing.html"
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install -q requests brotli && npm i -g lighthouse@12 > /dev/null 2>&1
+      - name: Crawl
+        continue-on-error: true
+        run: python3 crawl.py
+        env:
+          SITES: ${{ matrix.sites }}
+      - name: Lighthouse (mobile, one page at a time)
+        env:
+          PAGES: ${{ matrix.pages }}
+        run: |
+          mkdir -p out/lighthouse
+          for u in $PAGES; do
+            name=$(echo "$u" | sed -E 's#https://##; s#[/?&=]+#_#g; s#_$##')
+            rm -f lh.json
+            lighthouse "$u" --quiet --output=json --output-path=lh.json \
+              --chrome-flags="--headless=new --no-sandbox --disable-gpu" \
+              --only-categories=performance,accessibility,best-practices,seo \
+              --max-wait-for-load=45000 || echo "LH FAILED $u"
+            if [ -f lh.json ]; then
+              jq '{url: .finalDisplayedUrl,
+                   scores: (.categories | map_values(.score)),
+                   metrics: {fcp: .audits["first-contentful-paint"].displayValue, lcp: .audits["largest-contentful-paint"].displayValue, tbt: .audits["total-blocking-time"].displayValue, cls: .audits["cumulative-layout-shift"].displayValue, si: .audits["speed-index"].displayValue, bytes: .audits["total-byte-weight"].displayValue},
+                   failing: [.audits[] | select(.score != null and .score < 0.9) | {id, title, score, displayValue, items: ((.details.items // [])[0:6])}]}' lh.json > "out/lighthouse/$name.json"
+              jq -r '"LH \(.url) " + (.scores | to_entries | map("\(.key)=\((.value // 0) * 100 | round)") | join(" "))' "out/lighthouse/$name.json" || true
+            fi
+            sleep 15
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: audit-${{ matrix.group }}
+          path: out/
+          retention-days: 3
