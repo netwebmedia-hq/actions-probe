@@ -45,6 +45,8 @@ jobs:
                    failing: [.audits[] | select(.score != null and .score < 0.9) | {id, title, score, displayValue, items: ((.details.items // [])[0:6])}]}' lh.json > "out/lighthouse/$name.json"
               jq -r '"LH \(.url) " + (.scores | to_entries | map("\(.key)=\((.value // 0) * 100 | round)") | join(" "))' "out/lighthouse/$name.json" || true
             fi
+            # 360px-wide screenshot after 6 s of page time, to see the consent banner against the CTA
+            google-chrome --headless=new --no-sandbox --disable-gpu --hide-scrollbars --window-size=360,760               --virtual-time-budget=6000 --screenshot="out/lighthouse/$name.png" "$u" > /dev/null 2>&1 || echo "SHOT FAILED $u"
             sleep 15
           done
       - uses: actions/upload-artifact@v4
