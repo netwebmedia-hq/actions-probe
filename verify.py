@@ -39,6 +39,11 @@ CHECKS = [
     ("https://entrepoker.com/es/terminos.html", 200, ["rminos de uso"], []),
     ("https://entrepoker.com/en/terms.html", 200, ["Terms"], []),
     ("https://entrepoker.com/es/salas.html", 200, ["/es/terminos.html"], [" plata "]),
+    ("https://netwebmedia.com/industries/hospitality/hotels/", 200, ['property="og:image"', "summary_large_image"], []),
+    ("https://netwebmedia.com/industries/wine-agriculture/wineries/", 200, ['property="og:image"', "summary_large_image"], []),
+    ("https://fracmo.ai/sdr-ia.html", 200, ["https://fracmo.ai/assets/fracmo-og.png", "summary_large_image"], []),
+    ("https://fracmo.ai/embajadores-virtuales.html", 200, ['property="og:image"', "summary_large_image"], []),
+    ("https://fracmo.ai/golf-clubes.html", 200, ["summary_large_image"], []),
 ]
 
 
@@ -50,7 +55,8 @@ def main():
         time.sleep(1)
         try:
             r = s.get(url, allow_redirects=False, timeout=25)
-            hay = r.headers.get("location", "") if want in (301, 302) else r.text
+            r.encoding = "utf-8"  # the host sends text/html with no charset
+            hay =r.headers.get("location", "") if want in (301, 302) else r.text
             why = []
             if r.status_code != want:
                 why.append(f"status {r.status_code}, wanted {want}")
