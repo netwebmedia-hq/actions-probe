@@ -41,16 +41,23 @@ jobs:
           mkdir -p out/lighthouse
           for u in $PAGES; do
             name=$(echo "$u" | sed -E 's#https://##; s#[/?&=]+#_#g; s#_$##')
-            rm -f lh.json
-            lighthouse "$u" --quiet --output=json --output-path=lh.json \
-              --chrome-flags="--headless=new --no-sandbox --disable-gpu" \
-              --only-categories=performance,accessibility,best-practices,seo \
-              --max-wait-for-load=45000 || echo "LH FAILED $u"
+            for try in 1 2; do
+              rm -f lh.json
+              lighthouse "$u" --quiet --output=json --output-path=lh.json \
+                --chrome-flags="--headless=new --no-sandbox --disable-gpu" \
+                --only-categories=performance,accessibility,best-practices,seo \
+                --max-wait-for-load=45000 || echo "LH FAILED $u"
+              [ -f lh.json ] && [ "$(jq -r '.categories.performance.score' lh.json)" != "null" ] && break
+              echo "LH RETRY $u: $(jq -c '[.runtimeError, ([.audits[] | select(.scoreDisplayMode == "error") | .errorMessage] | unique)]' lh.json 2>/dev/null | cut -c1-400)"
+              sleep 10
+            done
             if [ -f lh.json ]; then
               jq '{url: .finalDisplayedUrl,
                    scores: (.categories | map_values(.score)),
                    metrics: {fcp: .audits["first-contentful-paint"].displayValue, lcp: .audits["largest-contentful-paint"].displayValue, tbt: .audits["total-blocking-time"].displayValue, cls: .audits["cumulative-layout-shift"].displayValue, si: .audits["speed-index"].displayValue, bytes: .audits["total-byte-weight"].displayValue},
                    failing: [.audits[] | select(.score != null and .score < 0.9) | {id, title, score, displayValue, items: ((.details.items // [])[0:6])}],
+                   runtimeError: (.runtimeError // null), warnings: (.runWarnings // []),
+                   errors: [.audits[] | select(.scoreDisplayMode == "error") | {id, errorMessage}],
                    diag: (["bootup-time","mainthread-work-breakdown","long-tasks","third-party-summary","third-parties-insight"] as $k | [.audits[] | select(.id as $i | $k | index($i)) | {id, displayValue, items: ((.details.items // [])[0:10])}])}' lh.json > "out/lighthouse/$name.json"
               jq -r '"LH \(.url) " + (.scores | to_entries | map("\(.key)=\((.value // 0) * 100 | round)") | join(" "))' "out/lighthouse/$name.json" || true
             fi
