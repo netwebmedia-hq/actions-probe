@@ -1,0 +1,109 @@
+name: capacitor safe-area inset repro
+
+# Minimal Capacitor iOS app: does a sticky header padded with env(safe-area-inset-top) sit below the
+# status bar from the first frame? Compares ios.contentInset "automatic" against "never" in the simulator.
+on:
+  workflow_dispatch:
+  push:
+    paths: ['repro/**', '.github/workflows/inset-repro.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  repro:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: repro
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Create the Capacitor iOS project
+        run: |
+          cat > package.json <<'EOF'
+          { "name": "inset-repro", "version": "1.0.0", "private": true }
+          EOF
+          npm install --no-audit --no-fund @capacitor/core@^8.5.2 @capacitor/ios@^8.5.2 @capacitor/cli@^8.5.2
+          cat > capacitor.config.json <<'EOF'
+          { "appId": "com.example.insetrepro", "appName": "Inset Repro", "webDir": "www-min",
+            "plugins": { "CapacitorHttp": { "enabled": true } },
+            "ios": { "contentInset": "automatic", "backgroundColor": "#F2F4F8" } }
+          EOF
+          npx cap add ios
+          npx cap sync ios
+          ls ios/App
+
+      - name: Fetch a real public page as the second test page
+        run: |
+          python3 - <<'PY'
+          import os, re, urllib.request
+          base = 'https://dongaston.com/apps/'
+          hdr = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Safari/605.1.15', 'Referer': base}
+          def get(u):
+              return urllib.request.urlopen(urllib.request.Request(u, headers=hdr), timeout=30).read()
+          os.makedirs('www-real', exist_ok=True)
+          try:
+              html = get(base)
+              open('www-real/index.html', 'wb').write(html)
+              refs = set(re.findall(r'(?:href|src)="([^"#:]+?)(?:\?[^"]*)?"', html.decode('utf8', 'replace')))
+              n = 0
+              for r in sorted(refs):
+                  if r.startswith('/') or r.endswith('/') or '..' in r: continue
+                  try:
+                      d = os.path.join('www-real', r); os.makedirs(os.path.dirname(d) or '.', exist_ok=True)
+                      open(d, 'wb').write(get(base + r)); n += 1
+                  except Exception as e: print('skip', r, e)
+              print('fetched', n, 'files')
+          except Exception as e:
+              print('real page not fetched:', e)
+              import shutil; shutil.rmtree('www-real', ignore_errors=True)
+          PY
+
+      - name: Pick and boot a simulator
+        run: |
+          xcodebuild -version
+          UDID=$(xcrun simctl list devices available -j | python3 -c "
+          import json,sys
+          d=json.load(sys.stdin)['devices']
+          c=[(k,x) for k,v in d.items() if 'iOS' in k for x in v if x['name'].startswith('iPhone') and 'Max' not in x['name'] and 'SE' not in x['name']]
+          c.sort(key=lambda t:(t[0],t[1]['name']))
+          k,x=c[-1]; print(x['udid']); print(k,x['name'],file=sys.stderr)")
+          echo "UDID=$UDID" >> "$GITHUB_ENV"
+          xcrun simctl boot "$UDID"
+          xcrun simctl bootstatus "$UDID" -b
+          xcrun simctl status_bar "$UDID" override --time "9:41" --batteryState charged --batteryLevel 100 || true
+
+      - name: Build for the simulator
+        run: |
+          if [ -d ios/App/App.xcworkspace ]; then T="-workspace ios/App/App.xcworkspace"; else T="-project ios/App/App.xcodeproj"; fi
+          xcodebuild $T -scheme App -configuration Release -sdk iphonesimulator -destination "id=$UDID" \
+            -derivedDataPath dd CODE_SIGNING_ALLOWED=NO build | tail -5
+          ls dd/Build/Products/Release-iphonesimulator/App.app | head -20
+
+      - name: Install idb (optional, for the focus test)
+        continue-on-error: true
+        run: |
+          brew tap facebook/fb
+          brew trust facebook/fb || true
+          brew install idb-companion || brew install facebook/fb/idb-companion
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install -q fb-idb
+          echo "$RUNNER_TEMP/venv/bin" >> "$GITHUB_PATH"
+
+      - name: Run the four variants
+        run: |
+          idb connect "$UDID" || true
+          bash run-variants.sh dd/Build/Products/Release-iphonesimulator/App.app out
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: inset-repro
+          path: repro/out
+          retention-days: 3

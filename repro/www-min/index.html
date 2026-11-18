@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Safe-area inset repro</title>
+<style>
+:root{--bg:#F2F4F8;--line:#d9dee7}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);font:16px -apple-system,system-ui,sans-serif;color:#111}
+.top{position:sticky;top:0;z-index:10;padding-top:env(safe-area-inset-top);background:color-mix(in srgb,var(--bg) 78%,transparent);-webkit-backdrop-filter:saturate(180%) blur(18px);backdrop-filter:saturate(180%) blur(18px);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:8px;height:56px;padding:0 16px;font-weight:700}
+#dbg{font:12px ui-monospace,monospace;color:#b91c1c}
+.hero{height:100px;background:#1f2937;color:#fff;padding:16px;font-size:22px;font-weight:700}
+main{padding:16px}
+.card{background:#fff;border-radius:16px;padding:16px;margin:0 0 12px;min-height:120px}
+label{display:block;line-height:20px}
+input{display:block;width:100%;height:52px;font-size:16px;border:1px solid var(--line);border-radius:12px;padding:0 12px}
+.foot{padding:20px 16px calc(24px + env(safe-area-inset-bottom));font-size:12px;color:#555}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">HEADER <span id="dbg"></span></div></header>
+<div class="hero">Hero block</div>
+<main>
+  <div class="card"><label>Field<input id="f" inputmode="numeric" autocomplete="off"></label></div>
+  <div class="card">Card 2</div><div class="card">Card 3</div><div class="card">Card 4</div>
+  <div class="card">Card 5</div><div class="card">Card 6</div><div class="card">Card 7</div>
+  <div class="card">Card 8</div><div class="card">Card 9</div><div class="card">Card 10</div>
+</main>
+<div class="foot">Footer, last line of the page.</div>
+<script>
+// Shows what env(safe-area-inset-top) resolves to, the seconds since load and the scroll position.
+var t0 = performance.now(), probe = document.createElement('div');
+probe.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:env(safe-area-inset-top);visibility:hidden';
+document.body.appendChild(probe);
+setInterval(function () {
+  document.getElementById('dbg').textContent = 'env-top=' + probe.offsetHeight + ' t=' + ((performance.now() - t0) / 1000).toFixed(1) + 's scrollY=' + Math.round(scrollY);
+}, 200);
+</script>
+</body>
+</html>
