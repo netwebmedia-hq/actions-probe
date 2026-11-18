@@ -1,0 +1,13 @@
+name: dl
+on: workflow_dispatch
+jobs:
+  dl:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - run: |
+          U="https://netwebmedia.com/social-media/e5dd8eaaa2cb0dfcc0200559822867c2d2ca478d830ae2ef76b98d7a3a732006.mp4"
+          for UA in "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36" "facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)"; do
+            curl -s -o /dev/null -m 100 -A "$UA" -w "DL %{http_code} %{size_download} bytes %{time_total}s %{speed_download} B/s\n" "$U" || true
+            sleep 3
+          done
