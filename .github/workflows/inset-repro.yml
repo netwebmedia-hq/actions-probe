@@ -39,31 +39,40 @@ jobs:
           npx cap sync ios
           ls ios/App
 
-      - name: Fetch a real public page as the second test page
+      - name: Fetch public pages as extra test pages
         run: |
           python3 - <<'PY'
-          import os, re, urllib.request
-          base = 'https://dongaston.com/apps/'
-          hdr = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Safari/605.1.15', 'Referer': base}
-          def get(u):
-              return urllib.request.urlopen(urllib.request.Request(u, headers=hdr), timeout=30).read()
-          os.makedirs('www-real', exist_ok=True)
-          try:
-              html = get(base)
-              open('www-real/index.html', 'wb').write(html)
-              refs = set(re.findall(r'(?:href|src)="([^"#:]+?)(?:\?[^"]*)?"', html.decode('utf8', 'replace')))
-              n = 0
-              for r in sorted(refs):
-                  if r.startswith('/') or r.endswith('/') or '..' in r: continue
-                  try:
-                      d = os.path.join('www-real', r); os.makedirs(os.path.dirname(d) or '.', exist_ok=True)
-                      open(d, 'wb').write(get(base + r)); n += 1
-                  except Exception as e: print('skip', r, e)
-              print('fetched', n, 'files')
-          except Exception as e:
-              print('real page not fetched:', e)
-              import shutil; shutil.rmtree('www-real', ignore_errors=True)
+          import os, re, shutil, urllib.request
+          # name: (public page, the safe-area rule under test, added to the page)
+          PAGES = {
+            'hub':    ('https://dongaston.com/apps/', ''),
+            'plain':  ('https://datomaestro.fracmo.ai/', 'header{padding-top:calc(20px + env(safe-area-inset-top))}'),
+            'sticky': ('https://dongaston.com/billeterasmart/', '.top{position:sticky;top:0;z-index:2;padding-top:env(safe-area-inset-top)}'),
+          }
+          hdr = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Safari/605.1.15'}
+          def get(u, ref):
+              return urllib.request.urlopen(urllib.request.Request(u, headers=dict(hdr, Referer=ref)), timeout=30).read()
+          for name, (base, rule) in PAGES.items():
+              d = 'www-' + name
+              os.makedirs(d, exist_ok=True)
+              try:
+                  html = get(base, base).decode('utf8', 'replace')
+                  refs = set(re.findall(r'(?:href|src)="([^"#:]+?)(?:\?[^"]*)?"', html))
+                  html = re.sub(r'<meta name="viewport"[^>]*>', '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">', html, count=1)
+                  if rule: html = html.replace('</head>', '<style>' + rule + '</style></head>', 1)
+                  open(d + '/index.html', 'w', encoding='utf8').write(html)
+                  n = 0
+                  for r in sorted(refs):
+                      if r.startswith('/') or r.endswith('/') or '..' in r: continue
+                      try:
+                          f = os.path.join(d, r); os.makedirs(os.path.dirname(f) or '.', exist_ok=True)
+                          open(f, 'wb').write(get(base + r, base)); n += 1
+                      except Exception as e: print('skip', r, e)
+                  print(name, 'fetched', n, 'files')
+              except Exception as e:
+                  print(name, 'not fetched:', e); shutil.rmtree(d, ignore_errors=True)
           PY
+          ls -d www-*
 
       - name: Pick and boot a simulator
         run: |
@@ -86,19 +95,8 @@ jobs:
             -derivedDataPath dd CODE_SIGNING_ALLOWED=NO build | tail -5
           ls dd/Build/Products/Release-iphonesimulator/App.app | head -20
 
-      - name: Install idb (optional, for the focus test)
-        continue-on-error: true
+      - name: Run every page with both settings
         run: |
-          brew tap facebook/fb
-          brew trust facebook/fb || true
-          brew install idb-companion || brew install facebook/fb/idb-companion
-          python3 -m venv "$RUNNER_TEMP/venv"
-          "$RUNNER_TEMP/venv/bin/pip" install -q fb-idb
-          echo "$RUNNER_TEMP/venv/bin" >> "$GITHUB_PATH"
-
-      - name: Run the four variants
-        run: |
-          idb connect "$UDID" || true
           bash run-variants.sh dd/Build/Products/Release-iphonesimulator/App.app out
 
       - uses: actions/upload-artifact@v4
