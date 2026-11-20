@@ -1,0 +1,22 @@
+name: aeo-crawl
+# Search + AI-crawler audit (aeo_crawl.py). One polite keep-alive session, ~1 request/s.
+on:
+  push:
+    branches: [diag/aeo-crawl]
+  workflow_dispatch:
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install -q requests brotli
+      - run: python3 aeo_crawl.py
+        env:
+          SITES: "netwebmedia.com fracmo.ai apps.fracmo.ai dongaston.com golferos.com marpolis.com entrepoker.com climalerta.com realiracing.com tapephoto.com"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aeo-crawl
+          path: out/
+          retention-days: 3
