@@ -1,0 +1,92 @@
+name: Sealed iOS build
+
+# Builds an unsigned iOS app from an encrypted source bundle attached to a release,
+# and returns the result encrypted. Nothing readable is stored in this repo or its logs.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag that holds the encrypted source bundle'
+        required: true
+      asset:
+        description: 'Asset name on that release (e.g. a.enc)'
+        required: true
+      build_number:
+        description: 'CFBundleVersion'
+        required: false
+        default: '1'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 20
+    env:
+      BUILD_PASS: ${{ secrets.BUILD_PASS }}
+    steps:
+      - name: Fetch and open the source bundle
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+          ASSET: ${{ inputs.asset }}
+        run: |
+          set -euo pipefail
+          test -n "$BUILD_PASS" || { echo "::error::BUILD_PASS is not set"; exit 1; }
+          gh release download "$TAG" -R "$GITHUB_REPOSITORY" -p "$ASSET" -O "$RUNNER_TEMP/in.enc"
+          mkdir -p "$RUNNER_TEMP/src"
+          openssl enc -d -aes-256-cbc -pbkdf2 -md sha256 -iter 200000 -pass env:BUILD_PASS -in "$RUNNER_TEMP/in.enc" \
+            | tar -xz -C "$RUNNER_TEMP/src"
+          echo "APP_DIR=$RUNNER_TEMP/src/$(ls "$RUNNER_TEMP/src" | head -n1)" >> "$GITHUB_ENV"
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Web bundle and native sync
+        run: |
+          set -euo pipefail
+          cd "$APP_DIR"
+          npm ci --silent
+          npm run build --silent > /dev/null
+          npx cap sync ios > /dev/null
+          cd ios/App && pod install --silent
+
+      - name: Archive (unsigned)
+        env:
+          BUILD_NUMBER: ${{ inputs.build_number }}
+        run: |
+          set -euo pipefail
+          cd "$APP_DIR"
+          marketing="$(node -p "require('./package.json').version")"
+          xcodebuild -version
+          cd ios/App
+          xcodebuild archive -quiet \
+            -workspace App.xcworkspace -scheme App -configuration Release \
+            -sdk iphoneos -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/App.xcarchive" \
+            MARKETING_VERSION="$marketing" CURRENT_PROJECT_VERSION="$BUILD_NUMBER" \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" > /dev/null
+          test -d "$RUNNER_TEMP/App.xcarchive/Products/Applications/App.app" || { echo "::error::archive not produced"; exit 1; }
+
+      - name: Pack and seal the result
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP"
+          mkdir -p out/Payload
+          cp -R App.xcarchive/Products/Applications/App.app out/Payload/
+          (cd out && zip -qry App.ipa Payload && rm -rf Payload)
+          (cd App.xcarchive && zip -qry ../out/dSYMs.zip dSYMs) || true
+          tar -cz -C out . | openssl enc -aes-256-cbc -pbkdf2 -md sha256 -iter 200000 -salt -pass env:BUILD_PASS -out result.enc
+          ls -l result.enc | awk '{print "sealed bytes:", $5}'
+
+      - name: Upload sealed result
+        uses: actions/upload-artifact@v4
+        with:
+          name: result
+          path: ${{ runner.temp }}/result.enc
+          retention-days: 1
+          if-no-files-found: error
