@@ -36,6 +36,7 @@ jobs:
           set -euo pipefail
           test -n "$BUILD_PASS" || { echo "::error::BUILD_PASS is not set"; exit 1; }
           gh release download "$TAG" -R "$GITHUB_REPOSITORY" -p "$ASSET" -O "$RUNNER_TEMP/in.enc"
+          openssl version; printf %s "$BUILD_PASS" | shasum -a 256 | cut -c1-8; wc -c < "$RUNNER_TEMP/in.enc"; head -c 8 "$RUNNER_TEMP/in.enc"; echo
           mkdir -p "$RUNNER_TEMP/src"
           openssl enc -d -aes-256-cbc -pbkdf2 -md sha256 -iter 200000 -pass env:BUILD_PASS -in "$RUNNER_TEMP/in.enc" \
             | tar -xz -C "$RUNNER_TEMP/src"
