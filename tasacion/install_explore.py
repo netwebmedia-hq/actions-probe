@@ -99,7 +99,8 @@ NEVER = ['never-matches-any-label']  # fixed points: the label dump lags behind 
 step('close-safari-tip', NEVER, (383, 659), wait=5)
 step('safari-more', NEVER, (362, 855), wait=5)
 step('share', NEVER, (222, 581), wait=7)
-step('share-sheet-scroll', action=lambda: sh(['idb', 'ui', 'swipe', '--udid', UDID, '210', '760', '210', '300']).returncode, wait=5)
+step('share-sheet-view-more', NEVER, (349, 815), wait=6)  # the chevron of the compact sheet; a swipe did not always expand it
+step('share-sheet-expanded', wait=1)
 # The share sheet is not in the accessibility dump: after the swipe "Add to Home Screen" sits at (160, 655) pt.
 step('add-to-home', NEVER, (160, 655), wait=6)
 step('add-dialog', wait=1)
