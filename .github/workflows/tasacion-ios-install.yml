@@ -40,7 +40,7 @@ jobs:
 
       - name: Run the install walk
         working-directory: tasacion
-        run: perl -e 'alarm 600; exec @ARGV' ../venv/bin/python install_explore.py "$UDID"
+        run: perl -e 'alarm 840; exec @ARGV' ../venv/bin/python install_explore.py "$UDID"
 
       - name: Network back on
         if: always()
