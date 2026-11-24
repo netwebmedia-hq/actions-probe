@@ -16,13 +16,17 @@ on:
         description: 'CFBundleVersion'
         required: false
         default: '1'
+      runner:
+        description: 'Runner label; xcode-27 = iOS 27 SDK (App Store requires it from April 2027)'
+        required: false
+        default: 'xcode-27'
 
 permissions:
   contents: read
 
 jobs:
   build:
-    runs-on: macos-latest
+    runs-on: ${{ inputs.runner || 'xcode-27' }}
     timeout-minutes: 20
     env:
       BUILD_PASS: ${{ secrets.BUILD_PASS }}
