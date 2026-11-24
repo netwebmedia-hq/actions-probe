@@ -89,15 +89,19 @@ def pf_block():
 
 
 print('openurl', sh(['xcrun', 'simctl', 'openurl', UDID, URL]).returncode, flush=True)
-time.sleep(20)
+time.sleep(15)
+for _ in range(8):  # the accessibility service needs a while after Safari's first launch
+    if isinstance(elements(), list):
+        break
+    time.sleep(8)
 step('safari-open', wait=1)
 step('system-dialog', [r"^Don.t Allow$", r'^Not Now$'], None, wait=2)
-step('close-safari-tip', [r'^Close$', r'Dismiss'], None, wait=2)
+step('close-safari-tip', [r'^Close$', r'^dismiss popup$'], (383, 659), wait=3)
 # The page's own consent bar sits over the bottom of the page: refuse, so it is out of the screenshots.
 step('page-consent', [r'^Rechazar', r'Solo necesarias', r'^Aceptar'], None, wait=2)
 step('page-install-pill', [r'^Instalar'], None, wait=2)
-step('safari-more', [r'^More$', r'Page Menu', r'More\b'], (362, 854), wait=3)
-step('share', [r'^Share', r'Compartir'], None, wait=4)
+step('safari-more', [r'^More$', r'^Page Menu$'], (362, 855), wait=4)
+step('share', [r'^Share$', r'^Share\W', r'^Compartir'], None, wait=5)
 step('share-sheet-scroll', action=lambda: sh(['idb', 'ui', 'swipe', '--udid', UDID, '210', '760', '210', '300']).returncode, wait=3)
 step('add-to-home', [r'Add to Home Screen', r'Agregar a inicio'], None, wait=4)
 step('confirm-add', [r'^Add$', r'^Agregar$'], None, wait=6)
