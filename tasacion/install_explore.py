@@ -23,7 +23,10 @@ def shot(name):
 
 
 def elements():
-    r = sh(['idb', 'ui', 'describe-all', '--udid', UDID])
+    try:
+        r = sh(['idb', 'ui', 'describe-all', '--udid', UDID], timeout=40)
+    except Exception as ex:
+        return {'error': repr(ex)[:200]}
     try:
         return json.loads(r.stdout.decode('utf8', 'replace'))
     except Exception:
@@ -85,11 +88,14 @@ def pf_block():
     return ips
 
 
-step('open-safari', action=lambda: sh(['xcrun', 'simctl', 'openurl', UDID, URL]).returncode, wait=15)
+print('openurl', sh(['xcrun', 'simctl', 'openurl', UDID, URL]).returncode, flush=True)
+time.sleep(20)
+step('safari-open', wait=1)
+step('system-dialog', [r"^Don.t Allow$", r'^Not Now$'], None, wait=2)
 step('close-safari-tip', [r'^Close$', r'Dismiss'], None, wait=2)
 # The page's own consent bar sits over the bottom of the page: refuse, so it is out of the screenshots.
 step('page-consent', [r'^Rechazar', r'Solo necesarias', r'^Aceptar'], None, wait=2)
-step('page-install-pill', [r'^Instalar'], (275, 108), wait=2)
+step('page-install-pill', [r'^Instalar'], None, wait=2)
 step('safari-more', [r'^More$', r'Page Menu', r'More\b'], (362, 854), wait=3)
 step('share', [r'^Share', r'Compartir'], None, wait=4)
 step('share-sheet-scroll', action=lambda: sh(['idb', 'ui', 'swipe', '--udid', UDID, '210', '760', '210', '300']).returncode, wait=3)
