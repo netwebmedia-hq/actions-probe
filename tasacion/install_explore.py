@@ -152,8 +152,9 @@ def tap_icon():
             tap_el(e)
             return {'found_on_attempt': attempt + 1, 'frame': e['frame']}
         seen.append(labels()[:5])
-        if attempt % 2 == 1:
-            swipe(360, 500, 60, 500)
+        # Next home page: a slow drag over the empty wallpaper, clear of widgets and icons.
+        rc = sh(['idb', 'ui', 'swipe', '--udid', UDID, '--duration', '0.4', '380', '650', '40', '650']).returncode
+        seen.append('swipe rc %s' % rc)
         time.sleep(4)
     return {'found': False, 'seen': seen}
 
