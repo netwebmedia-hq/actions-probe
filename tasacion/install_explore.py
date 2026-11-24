@@ -95,18 +95,15 @@ for _ in range(8):  # the accessibility service needs a while after Safari's fir
         break
     time.sleep(8)
 step('safari-open', wait=1)
-step('system-dialog', [r"^Don.t Allow$", r'^Not Now$'], None, wait=2)
-step('close-safari-tip', [r'^Close$', r'^dismiss popup$'], (383, 659), wait=3)
-# The page's own consent bar sits over the bottom of the page: refuse, so it is out of the screenshots.
-step('page-consent', [r'^Rechazar', r'Solo necesarias', r'^Aceptar'], None, wait=2)
-step('page-install-pill', [r'^Instalar'], None, wait=2)
-step('safari-more', [r'^More$', r'^Page Menu$'], (362, 855), wait=4)
-step('share', [r'^Share$', r'^Share\W', r'^Compartir'], None, wait=5)
-step('share-sheet-scroll', action=lambda: sh(['idb', 'ui', 'swipe', '--udid', UDID, '210', '760', '210', '300']).returncode, wait=3)
+NEVER = ['never-matches-any-label']  # fixed points: the label dump lags behind the screen
+step('close-safari-tip', NEVER, (383, 659), wait=5)
+step('safari-more', NEVER, (362, 855), wait=5)
+step('share', NEVER, (222, 581), wait=7)
+step('share-sheet-scroll', action=lambda: sh(['idb', 'ui', 'swipe', '--udid', UDID, '210', '760', '210', '300']).returncode, wait=5)
 # The share sheet is not in the accessibility dump: after the swipe "Add to Home Screen" sits at (160, 655) pt.
-step('add-to-home', [r'Add to Home Screen', r'Agregar a inicio'], (160, 655), wait=5)
+step('add-to-home', NEVER, (160, 655), wait=6)
 step('add-dialog', wait=1)
-step('confirm-add', [r'^Add$', r'^Agregar$'], (378, 78), wait=6)
+step('confirm-add', [chr(94)+'Add$', chr(94)+'Agregar$'], (378, 78), wait=7)
 step('home', action=lambda: sh(['idb', 'ui', 'button', '--udid', UDID, 'HOME']).returncode, wait=4)
 step('launch-icon', [r'Tasaci'], None, wait=12)
 step('launched', wait=2)
