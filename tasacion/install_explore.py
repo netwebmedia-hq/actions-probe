@@ -1,10 +1,13 @@
 """Marpolis tasación: add to the home screen from real Mobile Safari (iOS Simulator), launch it, go offline.
 
-Taps go through idb. Each step logs one JSON line (labels seen on screen included) and saves a
-screenshot, so a wrong tap shows up in the artifact and the next run can be corrected.
+Taps go through idb. Safari's own controls are found by their accessibility label and waited for;
+the share sheet is not in the label dump, so those taps use fixed points and a pixel check tells
+whether the "Add to Home Screen" dialog really opened. Each step logs one JSON line and a screenshot.
 Usage: python install_explore.py <simulator-udid>
 """
 import json, os, re, socket, subprocess, sys, time
+
+from PIL import Image
 
 UDID = sys.argv[1]
 URL = 'https://marpolis.com/tasacion.html'
@@ -15,35 +18,39 @@ N = [0]
 
 
 def sh(args, **kw):
-    return subprocess.run(args, capture_output=True, timeout=kw.pop('timeout', 90), **kw)
+    try:
+        return subprocess.run(args, capture_output=True, timeout=kw.pop('timeout', 60), **kw)
+    except subprocess.TimeoutExpired:
+        return subprocess.CompletedProcess(args, 124, b'', b'timeout')
 
 
 def shot(name):
-    sh(['xcrun', 'simctl', 'io', UDID, 'screenshot', os.path.join(OUT, name + '.png')])
+    path = os.path.join(OUT, name + '.png')
+    sh(['xcrun', 'simctl', 'io', UDID, 'screenshot', path])
+    return path
 
 
 def elements():
+    r = sh(['idb', 'ui', 'describe-all', '--udid', UDID], timeout=40)
     try:
-        r = sh(['idb', 'ui', 'describe-all', '--udid', UDID], timeout=40)
-    except Exception as ex:
-        return {'error': repr(ex)[:200]}
-    try:
-        return json.loads(r.stdout.decode('utf8', 'replace'))
+        v = json.loads(r.stdout.decode('utf8', 'replace'))
+        return v if isinstance(v, list) else []
     except Exception:
-        return {'error': (r.stderr or r.stdout).decode('utf8', 'replace')[:300]}
+        return []
 
 
 def label_of(e):
     return ' '.join(str(e.get(k) or '') for k in ('AXLabel', 'title', 'AXValue')).strip()
 
 
-def find(els, patterns):
-    if not isinstance(els, list):
-        return None
-    for p in patterns:
-        for e in els:
-            if re.search(p, label_of(e), re.I) and e.get('frame'):
-                return e
+def labels():
+    return sorted({label_of(e)[:28] for e in elements() if label_of(e)})[:14]
+
+
+def find(pattern, els=None):
+    for e in (els if els is not None else elements()):
+        if re.search(pattern, label_of(e), re.I) and e.get('frame'):
+            return e
     return None
 
 
@@ -51,34 +58,110 @@ def tap(x, y):
     return sh(['idb', 'ui', 'tap', '--udid', UDID, str(int(x)), str(int(y))]).returncode
 
 
-def step(name, patterns=None, fallback=None, wait=3, action=None):
-    """Tap the first element whose label matches; else the fallback point; log what was on screen."""
+def tap_el(e):
+    f = e['frame']
+    return tap(f['x'] + f['width'] / 2, f['y'] + f['height'] / 2)
+
+
+def wait_for(pattern, seconds=60):
+    end = time.time() + seconds
+    while time.time() < end:
+        e = find(pattern)
+        if e:
+            return e
+        time.sleep(3)
+    return None
+
+
+def log(name, **data):
     N[0] += 1
     name = '%02d-%s' % (N[0], name)
-    res = {'step': name}
+    data = dict(step=name, **data)
+    data['shot'] = os.path.basename(shot(name))
+    LOG.write(json.dumps(data, ensure_ascii=False) + '\n'); LOG.flush()
+    print(json.dumps(data, ensure_ascii=True)[:900], flush=True)
+    return data
+
+
+def home():
+    return sh(['idb', 'ui', 'button', '--udid', UDID, 'HOME']).returncode
+
+
+def swipe(x1, y1, x2, y2):
+    return sh(['idb', 'ui', 'swipe', '--udid', UDID, str(x1), str(y1), str(x2), str(y2)]).returncode
+
+
+def add_dialog_open(path):
+    """The dialog's "Open as Web App" switch is green at (349, 328) pt = (1048, 984) px; other sheets are grey there."""
     try:
-        els = elements()
-        res['labels'] = sorted({label_of(e)[:40] for e in els if label_of(e)})[:80] if isinstance(els, list) else els
-        if action:
-            res['action'] = action()
-        elif patterns:
-            e = find(els, patterns)
-            if e:
-                f = e['frame']
-                res['tapped'] = [label_of(e)[:40], f]
-                tap(f['x'] + f['width'] / 2, f['y'] + f['height'] / 2)
-            elif fallback:
-                res['tapped'] = ['fallback', fallback]
-                tap(*fallback)
-            else:
-                res['tapped'] = None
+        r, g, b = Image.open(path).convert('RGB').getpixel((1048, 984))
+        return bool(g > 150 and r < 130 and b < 160), [r, g, b]
     except Exception as ex:
-        res['error'] = repr(ex)[:400]
-    time.sleep(wait)
-    shot(name)
-    LOG.write(json.dumps(res, ensure_ascii=False) + '\n'); LOG.flush()
-    print(json.dumps(res, ensure_ascii=False)[:1200], flush=True)
-    return res
+        return False, repr(ex)[:80]
+
+
+def open_share_sheet():
+    """Close Safari's first-run tip if it is up, then More -> Share, each waited for by label."""
+    seen = {}
+    e = wait_for(r'^(Close|More)$', 90)
+    seen['first'] = e and label_of(e)
+    if e and re.match('Close', label_of(e)):
+        tap_el(e); time.sleep(3)
+    e = wait_for(r'^More$', 40)
+    if not e:
+        return dict(seen, error='no More button', labels=labels())
+    tap_el(e)
+    e = wait_for(r'^Share$', 30)
+    if not e:
+        return dict(seen, error='menu did not open', labels=labels())
+    tap_el(e)
+    # The sheet belongs to another process: it is up once Safari's own controls leave the dump.
+    end = time.time() + 30
+    while time.time() < end and find(r'^(Share|More)$'):
+        time.sleep(2)
+    time.sleep(4)
+    return dict(seen, ok=True)
+
+
+def install():
+    for attempt in range(3):
+        t = {'attempt': attempt + 1, 'sheet': open_share_sheet()}
+        log('share-sheet-%d' % (attempt + 1), **t)
+        if t['sheet'].get('ok'):
+            swipe(210, 760, 210, 300); time.sleep(5)
+            log('sheet-expanded-%d' % (attempt + 1))
+            tap(160, 655); time.sleep(6)          # "Add to Home Screen" in the expanded sheet
+            opened, px = add_dialog_open(shot('probe'))
+            log('after-add-to-home-%d' % (attempt + 1), dialog=opened, pixel=px)
+            if opened:
+                tap(368, 120); time.sleep(8)      # the blue Add button
+                log('after-add')
+                return {'installed_on_attempt': attempt + 1}
+        # Wrong sheet, or none: close whatever is up (its X is at 41, 120) and start again.
+        tap(41, 120); time.sleep(4)
+        tap(41, 120); time.sleep(3)
+    return {'installed': False}
+
+
+def tap_icon():
+    """Find the Tasación icon on whichever home page it is; tap it by its own frame."""
+    seen = []
+    for attempt in range(8):
+        e = find('Tasaci')
+        if e:
+            tap_el(e)
+            return {'found_on_attempt': attempt + 1, 'frame': e['frame']}
+        seen.append(labels()[:5])
+        if attempt % 2 == 1:
+            swipe(360, 500, 60, 500)
+        time.sleep(4)
+    return {'found': False, 'seen': seen}
+
+
+def end_web_processes():
+    """Simulator apps are host processes: end the web app and WebKit's helpers so the next launch is cold."""
+    codes = [sh(['pkill', '-f', p]).returncode for p in ('Web.app/Web', 'com.apple.WebKit.WebContent', 'com.apple.WebKit.Networking')]
+    return {'pkill': codes}
 
 
 def pf_block():
@@ -90,57 +173,20 @@ def pf_block():
 
 print('openurl', sh(['xcrun', 'simctl', 'openurl', UDID, URL]).returncode, flush=True)
 time.sleep(15)
-for _ in range(8):  # the accessibility service needs a while after Safari's first launch
-    if isinstance(elements(), list):
-        break
+log('safari-open', labels=labels())
+res = install()
+log('install-result', **res)
+if res.get('installed_on_attempt'):
+    home(); time.sleep(5)
+    log('launch-icon', **tap_icon())
+    time.sleep(30)                                # the worker saves its 13 files on this first launch
+    log('launched-online', labels=labels())
+    log('cut-network', ips=pf_block())
+    home(); time.sleep(4)
+    log('end-web-processes', **end_web_processes())
     time.sleep(8)
-step('safari-open', wait=1)
-NEVER = ['never-matches-any-label']  # fixed points: the label dump lags behind the screen
-step('close-safari-tip', NEVER, (383, 659), wait=5)
-step('safari-more', NEVER, (362, 855), wait=5)
-step('share', NEVER, (222, 581), wait=7)
-step('share-sheet-view-more', NEVER, (349, 815), wait=6)  # the chevron of the compact sheet; a swipe did not always expand it
-step('share-sheet-expanded', wait=1)
-# The share sheet is not in the accessibility dump: after the swipe "Add to Home Screen" sits at (160, 655) pt.
-step('add-to-home', NEVER, (160, 655), wait=6)
-step('add-dialog', wait=1)
-step('confirm-add', NEVER, (368, 120), wait=8)  # the blue Add button of the dialog
-def home():
-    return sh(['idb', 'ui', 'button', '--udid', UDID, 'HOME']).returncode
-
-
-def tap_icon():
-    """Find the Tasación icon on whichever home page it is; tap it by its own frame."""
-    seen = []
-    for attempt in range(6):
-        els = elements()
-        e = find(els, ['Tasaci'])
-        if e:
-            f = e['frame']
-            tap(f['x'] + f['width'] / 2, f['y'] + f['height'] / 2)
-            return {'found_on_attempt': attempt + 1, 'frame': f}
-        seen.append(sorted({label_of(x)[:18] for x in els if label_of(x)})[:6] if isinstance(els, list) else 'no dump')
-        if attempt in (1, 3):
-            sh(['idb', 'ui', 'swipe', '--udid', UDID, '360', '500', '60', '500'])
-        time.sleep(4)
-    return {'found': False, 'seen': seen}
-
-
-def end_web_processes():
-    """Simulator apps are host processes: end the web app and WebKit's helpers so the next launch is cold."""
-    before = sh(['pgrep', '-lf', 'Web']).stdout.decode('utf8', 'replace')
-    lines = [l for l in before.split('\n') if 'CoreSimulator' in l or 'Web.app' in l or 'WebKit' in l]
-    codes = [sh(['pkill', '-f', p]).returncode for p in ('Web.app/Web', 'com.apple.WebKit.WebContent', 'com.apple.WebKit.Networking')]
-    return {'matched': [l[-110:] for l in lines][:12], 'pkill': codes}
-
-
-step('home', action=home, wait=5)
-step('launch-icon', action=tap_icon, wait=28)  # long wait: the worker saves its 13 files on this first launch
-step('launched-online', wait=2)
-step('cut-network', action=pf_block, wait=2)
-step('home-again', action=home, wait=4)
-step('end-web-processes', action=end_web_processes, wait=8)
-step('home-before-relaunch', action=home, wait=4)
-step('relaunch-offline', action=tap_icon, wait=25)
-step('offline-state', wait=2)
-step('restore-network', action=lambda: sh(['sudo', 'pfctl', '-d']).returncode, wait=1)
+    home(); time.sleep(4)
+    log('relaunch-offline', **tap_icon())
+    time.sleep(25)
+    log('offline-state', labels=labels())
+    sh(['sudo', 'pfctl', '-d'])
