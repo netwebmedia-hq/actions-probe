@@ -104,24 +104,42 @@ step('share-sheet-scroll', action=lambda: sh(['idb', 'ui', 'swipe', '--udid', UD
 step('add-to-home', NEVER, (160, 655), wait=6)
 step('add-dialog', wait=1)
 step('confirm-add', NEVER, (368, 120), wait=8)  # the blue Add button of the dialog
-step('home', action=lambda: sh(['idb', 'ui', 'button', '--udid', UDID, 'HOME']).returncode, wait=4)
-step('home-page-2', action=lambda: sh(['idb', 'ui', 'swipe', '--udid', UDID, '360', '500', '60', '500']).returncode, wait=4)
-step('home-screen', wait=1)
-step('launch-icon', ['Tasaci'], (259, 235), wait=28)  # long wait: the worker saves its 13 files now
-step('launched', wait=2)
+def home():
+    return sh(['idb', 'ui', 'button', '--udid', UDID, 'HOME']).returncode
+
+
+def tap_icon():
+    """Find the Tasación icon on whichever home page it is; tap it by its own frame."""
+    seen = []
+    for attempt in range(6):
+        els = elements()
+        e = find(els, ['Tasaci'])
+        if e:
+            f = e['frame']
+            tap(f['x'] + f['width'] / 2, f['y'] + f['height'] / 2)
+            return {'found_on_attempt': attempt + 1, 'frame': f}
+        seen.append(sorted({label_of(x)[:18] for x in els if label_of(x)})[:6] if isinstance(els, list) else 'no dump')
+        if attempt in (1, 3):
+            sh(['idb', 'ui', 'swipe', '--udid', UDID, '360', '500', '60', '500'])
+        time.sleep(4)
+    return {'found': False, 'seen': seen}
+
+
+def end_web_processes():
+    """Simulator apps are host processes: end the web app and WebKit's helpers so the next launch is cold."""
+    before = sh(['pgrep', '-lf', 'Web']).stdout.decode('utf8', 'replace')
+    lines = [l for l in before.split('\n') if 'CoreSimulator' in l or 'Web.app' in l or 'WebKit' in l]
+    codes = [sh(['pkill', '-f', p]).returncode for p in ('Web.app/Web', 'com.apple.WebKit.WebContent', 'com.apple.WebKit.Networking')]
+    return {'matched': [l[-110:] for l in lines][:12], 'pkill': codes}
+
+
+step('home', action=home, wait=5)
+step('launch-icon', action=tap_icon, wait=28)  # long wait: the worker saves its 13 files on this first launch
+step('launched-online', wait=2)
 step('cut-network', action=pf_block, wait=2)
-step('home-again', action=lambda: sh(['idb', 'ui', 'button', '--udid', UDID, 'HOME']).returncode, wait=3)
-def reboot():
-    # A cold start is the honest offline test: nothing of the web app is left in memory.
-    a = sh(['xcrun', 'simctl', 'shutdown', UDID], timeout=120).returncode
-    b = sh(['xcrun', 'simctl', 'boot', UDID], timeout=120).returncode
-    c = sh(['xcrun', 'simctl', 'bootstatus', UDID, '-b'], timeout=240).returncode
-    return [a, b, c]
-step('reboot-simulator', action=reboot, wait=25)
-step('home-after-reboot', wait=20)
-step('home-page-2-again', action=lambda: sh(['idb', 'ui', 'swipe', '--udid', UDID, '360', '500', '60', '500']).returncode, wait=4)
-step('home-page-2-retry', action=lambda: (0 if any('Tasaci' in label_of(e) for e in (elements() if isinstance(elements(), list) else [])) else sh(['idb', 'ui', 'swipe', '--udid', UDID, '360', '500', '60', '500']).returncode), wait=5)
-step('home-screen-again', wait=1)
-step('relaunch-offline', ['Tasaci'], (259, 235), wait=25)
+step('home-again', action=home, wait=4)
+step('end-web-processes', action=end_web_processes, wait=8)
+step('home-before-relaunch', action=home, wait=4)
+step('relaunch-offline', action=tap_icon, wait=25)
 step('offline-state', wait=2)
 step('restore-network', action=lambda: sh(['sudo', 'pfctl', '-d']).returncode, wait=1)
