@@ -367,7 +367,8 @@ def s_find_icon():
     STATE['icon'] = bool(hit)
     if hit:
         STATE['xy'] = (hit[0]['cx'], hit[0]['cy'])
-    diag = sh('dumpsys shortcut | grep -i -A6 -E "tasaci|pinned" | head -60')
+    open(os.path.join(OUT, 'dumpsys-shortcut.txt'), 'w', encoding='utf8').write(sh('dumpsys shortcut', timeout=60))
+    diag = ''
     time.sleep(12)
     late = [n['text'] for n in ui('ui-home-late') if n['text']]
     return {'diag': diag[:1500], 'late': late, 'found': [(n['text'], n['desc'], n['cx'], n['cy']) for n in hit],
@@ -410,22 +411,19 @@ def s_offline_on():
 
 
 def s_offline_open():
-    if STATE['icon']:
-        sh('am force-stop %s' % PKG)
-        time.sleep(2)
-        sh('input keyevent KEYCODE_HOME')
-        time.sleep(4)
-        nodes = ui('ui-offline-home')
-        hit = find(nodes, r'Tasaci')
-        shot('offline-home')
-        if not hit:
-            raise RuntimeError('icon vanished: ' + str([n['text'] for n in nodes if n['text']][:15]))
+    how = None
+    sh('am force-stop %s' % PKG)
+    time.sleep(4)  # killing the app drops the launcher to its home page without a HOME key (a 2nd HOME press loses the icon)
+    nodes = ui('ui-offline-home')
+    hit = find(nodes, r'Tasaci')
+    shot('offline-home')
+    if STATE['icon'] and hit:
         sh('input tap %d %d' % (hit[0]['cx'], hit[0]['cy']))
         how = 'installed icon'
     else:
-        sh('am force-stop %s' % PKG)
+        labels = [n['text'] for n in nodes if n['text']][:15]
         sh('am start -a android.intent.action.VIEW -d "%s?source=pwa" %s' % (URL, PKG))
-        how = 'chrome url (no icon)'
+        how = 'chrome url (icon not on home: %s)' % labels
     time.sleep(10)
     tapped = dialogs('offline')
     with_page(lambda p: None)
