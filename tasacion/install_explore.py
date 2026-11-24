@@ -103,14 +103,21 @@ step('share-sheet-scroll', action=lambda: sh(['idb', 'ui', 'swipe', '--udid', UD
 # The share sheet is not in the accessibility dump: after the swipe "Add to Home Screen" sits at (160, 655) pt.
 step('add-to-home', NEVER, (160, 655), wait=6)
 step('add-dialog', wait=1)
-step('confirm-add', [chr(94)+'Add$', chr(94)+'Agregar$'], (378, 78), wait=7)
+step('confirm-add', NEVER, (368, 120), wait=8)  # the blue Add button of the dialog
 step('home', action=lambda: sh(['idb', 'ui', 'button', '--udid', UDID, 'HOME']).returncode, wait=4)
-step('launch-icon', [r'Tasaci'], None, wait=12)
+step('home-screen', wait=1)
+step('launch-icon', ['Tasaci'], (64, 550), wait=14)
 step('launched', wait=2)
 step('cut-network', action=pf_block, wait=2)
 step('home-again', action=lambda: sh(['idb', 'ui', 'button', '--udid', UDID, 'HOME']).returncode, wait=3)
-step('end-web-app', action=lambda: [sh(['xcrun', 'simctl', 'terminate', UDID, b]).returncode
-                                    for b in ('com.apple.webapp', 'com.apple.mobilesafari')], wait=3)
-step('relaunch-offline', [r'Tasaci'], None, wait=15)
+def reboot():
+    # A cold start is the honest offline test: nothing of the web app is left in memory.
+    a = sh(['xcrun', 'simctl', 'shutdown', UDID], timeout=120).returncode
+    b = sh(['xcrun', 'simctl', 'boot', UDID], timeout=120).returncode
+    c = sh(['xcrun', 'simctl', 'bootstatus', UDID, '-b'], timeout=240).returncode
+    return [a, b, c]
+step('reboot-simulator', action=reboot, wait=25)
+step('home-after-reboot', wait=1)
+step('relaunch-offline', ['Tasaci'], (64, 550), wait=20)
 step('offline-state', wait=2)
 step('restore-network', action=lambda: sh(['sudo', 'pfctl', '-d']).returncode, wait=1)
