@@ -116,7 +116,25 @@ def load(url):
 
 step('01-online-load', lambda: load(URL))
 step('02-env', lambda: d.execute_script(JS_ENV))
+JS_DIAG = """const done = arguments[arguments.length - 1];
+(async () => {
+  const out = {};
+  try { const r = await fetch('/sw.js', {cache: 'no-store'}); out.swStatus = r.status; out.swType = r.headers.get('content-type'); out.swLen = (await r.text()).length; }
+  catch (e) { out.swFetchError = String(e); }
+  try { const regs = await navigator.serviceWorker.getRegistrations();
+    out.regs = regs.map(r => ({scope: r.scope, installing: !!r.installing, waiting: !!r.waiting, active: r.active && r.active.state})); }
+  catch (e) { out.regsError = String(e); }
+  try { const r = await navigator.serviceWorker.register('/sw.js'); out.registered = r.scope;
+    const w = r.installing || r.waiting || r.active; out.workerState = w && w.state;
+    await new Promise(res => setTimeout(res, 8000)); out.workerStateLater = w && w.state; }
+  catch (e) { out.registerError = String(e); }
+  try { out.cacheNames = await caches.keys(); } catch (e) { out.cachesError = String(e); }
+  done(out);
+})();"""
+
 step('03-worker-and-cache', lambda: d.execute_async_script(JS_SW))
+step('03b-worker-diagnosis', lambda: d.execute_async_script(JS_DIAG))
+step('03c-worker-and-cache-again', lambda: d.execute_async_script(JS_SW))
 step('04-install-pill-and-tip', lambda: d.execute_script(JS_INSTALL))
 step('05-small-targets-form', lambda: d.execute_script(JS_SMALL))
 step('06-valuation-online', lambda: d.execute_async_script(JS_CALC))
