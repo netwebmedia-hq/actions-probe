@@ -107,7 +107,7 @@ step('confirm-add', NEVER, (368, 120), wait=8)  # the blue Add button of the dia
 step('home', action=lambda: sh(['idb', 'ui', 'button', '--udid', UDID, 'HOME']).returncode, wait=4)
 step('home-page-2', action=lambda: sh(['idb', 'ui', 'swipe', '--udid', UDID, '360', '500', '60', '500']).returncode, wait=4)
 step('home-screen', wait=1)
-step('launch-icon', ['Tasaci'], (64, 130), wait=16)
+step('launch-icon', ['Tasaci'], (259, 235), wait=28)  # long wait: the worker saves its 13 files now
 step('launched', wait=2)
 step('cut-network', action=pf_block, wait=2)
 step('home-again', action=lambda: sh(['idb', 'ui', 'button', '--udid', UDID, 'HOME']).returncode, wait=3)
@@ -118,9 +118,10 @@ def reboot():
     c = sh(['xcrun', 'simctl', 'bootstatus', UDID, '-b'], timeout=240).returncode
     return [a, b, c]
 step('reboot-simulator', action=reboot, wait=25)
-step('home-after-reboot', wait=6)
+step('home-after-reboot', wait=20)
 step('home-page-2-again', action=lambda: sh(['idb', 'ui', 'swipe', '--udid', UDID, '360', '500', '60', '500']).returncode, wait=4)
+step('home-page-2-retry', action=lambda: (0 if any('Tasaci' in label_of(e) for e in (elements() if isinstance(elements(), list) else [])) else sh(['idb', 'ui', 'swipe', '--udid', UDID, '360', '500', '60', '500']).returncode), wait=5)
 step('home-screen-again', wait=1)
-step('relaunch-offline', ['Tasaci'], (64, 130), wait=22)
+step('relaunch-offline', ['Tasaci'], (259, 235), wait=25)
 step('offline-state', wait=2)
 step('restore-network', action=lambda: sh(['sudo', 'pfctl', '-d']).returncode, wait=1)
