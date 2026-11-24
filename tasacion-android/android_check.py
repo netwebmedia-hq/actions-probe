@@ -132,7 +132,7 @@ def targets():
 
 def page(match='marpolis.com', tries=30):
     last = None
-    for _ in range(tries):
+    for i in range(tries):
         try:
             ts = [t for t in targets() if match in t['url']]
             last = [t['url'] for t in ts]
@@ -148,6 +148,10 @@ def page(match='marpolis.com', tries=30):
         except Exception as e:
             last = repr(e)
             adb('forward', 'tcp:9222', 'localabstract:chrome_devtools_remote')  # re-arm after a Chrome crash
+        if match == 'marpolis.com' and i in (8, 16, 24):  # Chrome lost the page (first-run race or crash): open it again
+            sh('am start -a android.intent.action.VIEW -d %s %s' % (URL, PKG))
+            time.sleep(6)
+            dialogs('reopen%d' % i)
         time.sleep(2)
     raise RuntimeError('no page target for %s; saw %s' % (match, last))
 
