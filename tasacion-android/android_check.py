@@ -98,8 +98,8 @@ def dialogs(tag):
 
 # ---------- CDP ----------
 class Page:
-    def __init__(self, ws_url):
-        self.ws = websocket.create_connection(ws_url, timeout=70, suppress_origin=True)
+    def __init__(self, ws_url, timeout=70):
+        self.ws = websocket.create_connection(ws_url, timeout=timeout, suppress_origin=True)
         self.n = 0
 
     def call(self, method, **params):
@@ -135,9 +135,16 @@ def page(match='marpolis.com', tries=30):
     for _ in range(tries):
         try:
             ts = [t for t in targets() if match in t['url']]
-            if ts:
-                return Page(ts[-1]['webSocketDebuggerUrl'])
-            last = [t['url'] for t in targets()]
+            last = [t['url'] for t in ts]
+            for t in reversed(ts):  # restored background tabs never answer: take the visible one
+                try:
+                    pg = Page(t['webSocketDebuggerUrl'], timeout=8)
+                    if pg.ev('document.visibilityState') == 'visible':
+                        pg.ws.settimeout(70)
+                        return pg
+                    pg.close()
+                except Exception as e:
+                    last.append(repr(e)[:80])
         except Exception as e:
             last = repr(e)
         time.sleep(2)
@@ -332,7 +339,8 @@ def s_install():
     out['tapped'], out['dialogTexts'] = install_ui()
     # add-to-home dialogs from the launcher/Chrome: confirm "Add" if it appears
     time.sleep(8)
-    out['second'] = tap_text(r'^(Add|Add automatically|Install)$', save='ui-install-2')
+    out['second'] = tap_text(r'^(Add to home screen|Add automatically|Add)$', save='ui-install-2')
+    shot('after-add-tap')
     time.sleep(10)
     out['webapk'] = sh('pm list packages | grep -i webapk')
     STATE['installed'] = True
