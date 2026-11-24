@@ -1,0 +1,51 @@
+name: tasacion ios safari check
+
+# Opens the public Marpolis tasación in real Mobile Safari (iOS Simulator) through safaridriver:
+# service worker, cache, install tip, a valuation, then the same with the network to the site cut.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  safari:
+    runs-on: macos-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Pick and boot a simulator
+        run: |
+          xcodebuild -version
+          UDID=$(xcrun simctl list devices available -j | python3 -c "
+          import json,sys
+          d=json.load(sys.stdin)['devices']
+          c=[(k,x) for k,v in d.items() if 'iOS' in k for x in v if x['name'].startswith('iPhone') and 'Max' not in x['name'] and 'SE' not in x['name']]
+          c.sort(key=lambda t:(t[0],t[1]['name']))
+          k,x=c[-1]; print(x['udid']); print(k,x['name'],file=sys.stderr)")
+          echo "UDID=$UDID" >> "$GITHUB_ENV"
+          xcrun simctl boot "$UDID"
+          xcrun simctl bootstatus "$UDID" -b
+          xcrun simctl status_bar "$UDID" override --time "9:41" --batteryState charged --batteryLevel 100 || true
+
+      - name: Enable safaridriver
+        run: |
+          sudo safaridriver --enable
+          python3 -m venv venv
+          venv/bin/pip install --quiet selenium
+
+      - name: Run the check
+        working-directory: tasacion
+        run: perl -e 'alarm 780; exec @ARGV' ../venv/bin/python safari_check.py "$UDID"
+
+      - name: Network back on
+        if: always()
+        run: sudo pfctl -d || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tasacion-ios-safari
+          path: tasacion/out
+          if-no-files-found: warn
