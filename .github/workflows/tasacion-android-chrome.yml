@@ -1,0 +1,50 @@
+name: tasacion android chrome check
+
+# Opens the public Marpolis tasación in real Chrome on an Android emulator: service worker, cache,
+# installability, a valuation, install to the home screen, standalone launch, then the same offline.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Python deps
+        run: pip install --quiet websocket-client
+
+      - name: Emulator and check
+        uses: reactivecircus/android-emulator-runner@v2
+        env:
+          PYTHONUNBUFFERED: '1'
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          emulator-boot-timeout: 600
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none
+          script: timeout 1260 python3 tasacion-android/android_check.py
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tasacion-android-chrome
+          path: tasacion-android/out
+          if-no-files-found: warn
