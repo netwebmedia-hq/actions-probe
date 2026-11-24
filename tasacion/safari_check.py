@@ -43,7 +43,16 @@ opts = webdriver.SafariOptions()
 opts.set_capability('platformName', 'iOS')
 opts.set_capability('safari:useSimulator', True)
 opts.set_capability('safari:deviceUDID', UDID)
-d = webdriver.Safari(options=opts)
+d = None
+for attempt in range(4):  # launching Safari in a cold simulator can time out
+    try:
+        d = webdriver.Safari(options=opts)
+        break
+    except Exception as e:
+        print('session attempt', attempt + 1, 'failed:', repr(e)[:200], flush=True)
+        time.sleep(20)
+if d is None:
+    sys.exit('no Safari session after 4 attempts')
 d.set_script_timeout(40)
 d.set_page_load_timeout(60)
 
