@@ -348,16 +348,17 @@ def s_install():
 
 
 def find_icon():
-    sh('input keyevent KEYCODE_HOME')
-    time.sleep(2)
-    nodes = ui('ui-home')
-    hit = [n for n in find(nodes, r'Tasaci')]
-    if not hit:
-        sh('input swipe 540 1900 540 500 300')
-        time.sleep(2)
-        nodes = ui('ui-drawer')
-        hit = [n for n in find(nodes, r'Tasaci')]
-    return nodes, hit
+    for attempt in range(4):
+        sh('input keyevent KEYCODE_HOME')
+        time.sleep(4)
+        nodes = ui('ui-home-%d' % attempt)
+        hit = find(nodes, r'Tasaci')
+        if hit:
+            return nodes, hit
+    sh('input swipe 540 1900 540 500 300')
+    time.sleep(3)
+    nodes = ui('ui-drawer')
+    return nodes, find(nodes, r'Tasaci')
 
 
 def s_find_icon():
