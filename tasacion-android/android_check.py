@@ -365,17 +365,23 @@ def s_find_icon():
     nodes, hit = find_icon()
     shot('home-icon-search')
     STATE['icon'] = bool(hit)
-    return {'found': [(n['text'], n['desc'], n['cx'], n['cy']) for n in hit],
+    if hit:
+        STATE['xy'] = (hit[0]['cx'], hit[0]['cy'])
+    diag = sh('dumpsys shortcut | grep -i -A6 -E "tasaci|pinned" | head -60')
+    time.sleep(12)
+    late = [n['text'] for n in ui('ui-home-late') if n['text']]
+    return {'diag': diag[:1500], 'late': late, 'found': [(n['text'], n['desc'], n['cx'], n['cy']) for n in hit],
             'labels': sorted({n['text'] or n['desc'] for n in nodes if (n['text'] or n['desc'])})[:60]}
 
 
 def s_launch_icon():
-    nodes, hit = find_icon()
-    if not hit:
-        raise RuntimeError('no Tasación icon on home screen or app drawer')
-    sh('input tap %d %d' % (hit[0]['cx'], hit[0]['cy']))
+    # no HOME press here: step 10 left the launcher on the page that shows the icon
+    if not STATE.get('xy'):
+        raise RuntimeError('no icon coordinates from step 10')
+    nodes = ui('ui-before-icon-tap')
+    sh('input tap %d %d' % STATE['xy'])
     time.sleep(8)
-    return {'tapped': hit[0]['text'] or hit[0]['desc']}
+    return {'xy': STATE['xy'], 'iconStillThere': bool(find(nodes, r'Tasaci'))}
 
 
 def s_standalone():
@@ -407,9 +413,13 @@ def s_offline_open():
     if STATE['icon']:
         sh('am force-stop %s' % PKG)
         time.sleep(2)
-        nodes, hit = find_icon()
+        sh('input keyevent KEYCODE_HOME')
+        time.sleep(4)
+        nodes = ui('ui-offline-home')
+        hit = find(nodes, r'Tasaci')
+        shot('offline-home')
         if not hit:
-            raise RuntimeError('icon vanished')
+            raise RuntimeError('icon vanished: ' + str([n['text'] for n in nodes if n['text']][:15]))
         sh('input tap %d %d' % (hit[0]['cx'], hit[0]['cy']))
         how = 'installed icon'
     else:
