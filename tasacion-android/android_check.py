@@ -147,6 +147,7 @@ def page(match='marpolis.com', tries=30):
                     last.append(repr(e)[:80])
         except Exception as e:
             last = repr(e)
+            adb('forward', 'tcp:9222', 'localabstract:chrome_devtools_remote')  # re-arm after a Chrome crash
         time.sleep(2)
     raise RuntimeError('no page target for %s; saw %s' % (match, last))
 
