@@ -123,12 +123,25 @@ def open_share_sheet():
     return dict(seen, ok=True)
 
 
+def expand_sheet():
+    """Swipe the compact share sheet up until its action list shows (grey 236 at two points of the list)."""
+    for attempt in range(4):
+        try:
+            im = Image.open(shot('probe')).convert('RGB')
+            if all(abs(c - 236) <= 2 for p in ((630, 1960), (300, 2030)) for c in im.getpixel(p)):
+                return attempt
+        except Exception:
+            pass
+        swipe(210, 760, 210, 300); time.sleep(5)
+    return -1
+
+
 def install():
     for attempt in range(3):
         t = {'attempt': attempt + 1, 'sheet': open_share_sheet()}
         log('share-sheet-%d' % (attempt + 1), **t)
         if t['sheet'].get('ok'):
-            swipe(210, 760, 210, 300); time.sleep(5)
+            t['expanded'] = expand_sheet()
             log('sheet-expanded-%d' % (attempt + 1))
             tap(160, 655); time.sleep(6)          # "Add to Home Screen" in the expanded sheet
             opened, px = add_dialog_open(shot('probe'))
@@ -137,9 +150,10 @@ def install():
                 tap(368, 120); time.sleep(8)      # the blue Add button
                 log('after-add')
                 return {'installed_on_attempt': attempt + 1}
-        # Wrong sheet, or none: close whatever is up (its X is at 41, 120) and start again.
-        tap(41, 120); time.sleep(4)
-        tap(41, 120); time.sleep(3)
+        # Wrong sheet, or none: restart Safari on the page. (A tap to close it can land on the page's own
+        # logo link and leave the tasación; that installed the home page once.)
+        sh(['xcrun', 'simctl', 'terminate', UDID, 'com.apple.mobilesafari']); time.sleep(3)
+        sh(['xcrun', 'simctl', 'openurl', UDID, URL]); time.sleep(15)
     return {'installed': False}
 
 
