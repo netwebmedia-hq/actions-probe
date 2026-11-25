@@ -69,34 +69,34 @@ def s1():
     launch(30); shot('hub'); open_tool(); shot('tool-first-frames')
 
 
-def s3():
-    top(); tap(*BUILT); text('110'); tap(*HEAD)
-    top(); tap(*LOT); text('250'); tap(*HEAD)
-    time.sleep(6); view('casa', 6)
+def s_oficina():
+    top(); tap(123, 508, 3); shot('oficina-top'); swipe(210, 760, 210, 360); shot('oficina-p1')
+    top(); tap(123, 455, 3); shot('back-to-casa')
 
 
-def s5():
-    for name, p in (('depto', DEPTO), ('oficina', OFICINA), ('terreno', TERRENO)):
-        top(); tap(*p, 3); view(name, 3)
-    top(); tap(*CASA, 3)
+def s_comuna():
+    top(); tap(210, 592, 3); text('La Serena'); time.sleep(1); shot('comuna-typed')
+    tap(200, 598, 3); shot('comuna-after-tap')
+    top(); shot('serena-p0'); swipe(210, 760, 210, 360); shot('serena-p1')
+    top(); tap(334, 96, 1)    # nothing yet
+    sh(['xcrun', 'simctl', 'terminate', UDID, BUNDLE]); time.sleep(2)
 
 
-def s6():
-    top(); tap(*COMUNA, 3); shot('comuna-open')
-    text('La Serena'); time.sleep(1); shot('comuna-typed')
+def s_relaunch_serena():
+    launch(20); open_tool(); top(); shot('relaunch-serena-top'); swipe(210, 760, 210, 360); shot('relaunch-serena-p1')
+
+
+def s_whatsapp():
+    top()
     for i in range(3):
-        swipe(210, 800, 210, 700, '0.2'); shot('comuna-nudge-%d' % i)
+        swipe(210, 760, 210, 360)
+    shot('before-whatsapp')
+    tap(150, 414, 6); shot('after-whatsapp-tap')
 
 
-def s9():
-    sh(['xcrun', 'simctl', 'terminate', UDID, BUNDLE]); time.sleep(2)   # also clears the open picker
-    launch(25); open_tool(); top()
-    tap(334, 96, 5); shot('share-tapped')
-    swipe(210, 300, 210, 850); shot('share-dismissed')
-
-
-def s7():
-    launch(25); shot('relaunch-hub'); open_tool(); view('relaunch', 2)
+def s_keyboard():
+    launch(20); open_tool(); top(); tap(*BUILT, 2); swipe(210, 760, 210, 360); shot('kb-scrolled')
+    tap(374, 877, 2); shot('kb-dismissed-with-check'); swipe(210, 760, 210, 560); shot('kb-dismissed-scrolled')
 
 
 def pf_block():
@@ -111,7 +111,7 @@ def s8():
 
 
 try:
-    for fn in (s1, s3, s5, s6, s9, s7, s8):
+    for fn in (s1, s_oficina, s_comuna, s_relaunch_serena, s_whatsapp, s_keyboard):
         step(fn)
 finally:
     sh(['sudo', 'pfctl', '-d'])
