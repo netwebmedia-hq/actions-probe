@@ -80,7 +80,7 @@ def teal_button(path):
         elif run:
             hh = run[-1][0] - run[0][0]
             ww = max(a[2] for a in run) - min(a[1] for a in run)
-            if 80 <= hh <= 200 and 380 <= ww <= 640:
+            if 80 <= hh <= 200 and 380 <= ww <= 900:
                 return (min(a[1] for a in run) + max(a[2] for a in run)) / 2, (run[0][0] + run[-1][0]) / 2
             run = []
     return None
@@ -106,7 +106,7 @@ def fill(pt, value, box):
 def s1():
     launch(30); shot('hub'); open_tool(); top()
     print('built tries', fill(BUILT, '110', (105, 2010, 600, 2130)), flush=True)
-    print('lot tries', fill(LOT, '250', (700, 2010, 1150, 2130)), flush=True)
+    top(); tap(*LOT, 3); text('250'); tap(374, 877, 2)
     time.sleep(6); top(); shot('santiago-casa-top')
 
 
@@ -148,7 +148,7 @@ def s8():
 
 
 try:
-    for fn in (s1, s_oficina, s_comuna, s_whatsapp):
+    for fn in (s1, s_whatsapp):
         step(fn)
 finally:
     sh(['sudo', 'pfctl', '-d'])
