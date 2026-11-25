@@ -65,19 +65,33 @@ CASA, DEPTO, OFICINA, TERRENO = (123, 447), (297, 447), (123, 497), (297, 497)
 COMUNA, BUILT, LOT, HEAD = (210, 592), (119, 690), (301, 690), (91, 370)
 
 
+def selects_present():
+    from PIL import Image
+    p = os.path.join(OUT, 'probe.png')
+    sh(['xcrun', 'simctl', 'io', UDID, 'screenshot', p])
+    r, g, b = Image.open(p).convert('RGB').getpixel((630, 1776))   # (210,592) pt: grey if the Comuna select is there
+    print('pixel at comuna spot', r, g, b, flush=True)
+    return r < 250
+
+
 def scen_tasacion():
     launch(30); shot('A-hub'); open_tool(); top(); time.sleep(3); shot('A-rest')
-    tap(*BUILT, 3); shot('B-keyboard-up')
+    pt = (119, 690) if selects_present() else (118, 600)
+    print('built field tap at', pt, flush=True)
+    tap(*pt, 3); shot('B-keyboard-up')
     swipe(210, 760, 210, 360); time.sleep(1); shot('C-scrolled-380')
     swipe(210, 760, 210, 360); time.sleep(1); shot('D1-scrolled-760')
     top(); time.sleep(1); shot('D2-back-to-top')
     tap(374, 877, 3); shot('E-dismissed')
-    swipe(210, 760, 210, 360); time.sleep(1); shot('E2-dismissed-scrolled')
+    top(); shot('E2-dismissed-top')
 
 
 def scen_sueldo():
-    launch(25); tap(210, 572, 7); shot('F0-sueldo-open'); top(); shot('F1-sueldo-top')
-    swipe(210, 760, 210, 560); shot('F2-sueldo-scrolled-200')
+    launch(25); tap(210, 572, 7); shot('F0-sueldo-open')
+    tap(209, 543, 3); shot('F1-sueldo-keyboard-up')
+    swipe(210, 760, 210, 360); time.sleep(1); shot('F2-sueldo-scrolled-380')
+    swipe(210, 760, 210, 560); time.sleep(1); shot('F3-sueldo-scrolled-more')
+    tap(374, 877, 3); shot('F4-sueldo-dismissed')
 
 
 def pf_block():

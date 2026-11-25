@@ -10,13 +10,14 @@
     var f = function (n) { return typeof n === 'number' ? Math.round(n * 10) / 10 : n; };
     setInterval(function () {
       var v = window.visualViewport, h = document.querySelector('header.top');
-      var r = h ? h.getBoundingClientRect() : null, cs = h ? getComputedStyle(h) : null;
+      var cm = document.getElementById('tComuna'); var r = h ? h.getBoundingClientRect() : null, cs = h ? getComputedStyle(h) : null;
       b.textContent = [
         'vot ' + (v ? f(v.offsetTop) : '-'), 'vpt ' + (v ? f(v.pageTop) : '-'),
         'vh ' + (v ? f(v.height) : '-'), 'ih ' + innerHeight, 'sy ' + f(scrollY),
         'pp ' + getComputedStyle(pr).paddingTop,
         'ht ' + (r ? f(r.top) : '-'), 'hh ' + (r ? f(r.height) : '-'),
-        'hpt ' + (cs ? cs.paddingTop : '-'), 'htr ' + (cs ? cs.transform : '-')
+        'hpt ' + (cs ? cs.paddingTop : '-'), 'htr ' + (cs ? cs.transform : '-'),
+        'cmh ' + (cm ? f(cm.getBoundingClientRect().height) : '-'), 'cmo ' + (cm ? cm.options.length : '-'), 'cmp ' + (cm ? getComputedStyle(cm.parentElement).display : '-')
       ].join('\n');
     }, 300);
   } catch (e) {}
