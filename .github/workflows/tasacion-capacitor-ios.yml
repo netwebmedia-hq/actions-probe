@@ -61,7 +61,7 @@ jobs:
         working-directory: tasacion-capacitor
         run: |
           if [ -d ios/App/App.xcworkspace ]; then T="-workspace ios/App/App.xcworkspace"; else T="-project ios/App/App.xcodeproj"; fi
-          xcodebuild $T -scheme App -configuration Release -sdk iphonesimulator -destination "id=$UDID" \
+          xcodebuild $T -scheme App -configuration Release -sdk iphonesimulator -destination "generic/platform=iOS Simulator" \
             -derivedDataPath dd CODE_SIGNING_ALLOWED=NO build | tail -5
           APP=dd/Build/Products/Release-iphonesimulator/App.app
           ls $APP | head -20
