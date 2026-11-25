@@ -1,0 +1,973 @@
+/* Shared look for every factory app: phone first, feels like an installed app.
+ * Per-app accent comes from --accent (set inline by the page). Light and dark. */
+:root{
+  --accent:#1F2937;--accent-ink:var(--ink-on-bg,var(--accent));
+  --ink:#0B1220;--mut:#5E6A7E;--line:#E7EAF0;--bg:#F2F4F8;--card:#fff;--field:#F1F3F7;
+  --ok:#05704F;--bad:#B3372A;--warn:#92400E;
+  --r:16px;--shadow:0 0 0 1px var(--line),0 1px 2px rgba(16,24,40,.05);
+  --tint:color-mix(in srgb,var(--accent) 9%,var(--card));
+  --ghost-ink:color-mix(in srgb,var(--accent) 85%,#000);
+}
+@media (prefers-color-scheme:dark){:root{
+  --accent-ink:color-mix(in srgb,var(--accent) 42%,#fff);--ghost-ink:var(--accent-ink);
+  --ink:#F3F5F9;--mut:#98A2B3;--line:#262C38;--bg:#0B0E14;--card:#151922;--field:#1E2430;
+  --ok:#34D399;--bad:#F87171;--warn:#FBBF24;
+  --shadow:0 0 0 1px rgba(255,255,255,.05);
+  --tint:color-mix(in srgb,var(--accent) 22%,var(--card));
+}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{margin:0;font:17px/1.45 system-ui,-apple-system,"SF Pro Text","Segoe UI",Roboto,Arial,sans-serif;color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
+.wrap{max-width:640px;margin:0 auto;padding:0 max(16px,env(safe-area-inset-right)) 0 max(16px,env(safe-area-inset-left))}
+a{color:var(--accent-ink)}
+
+/* App bar: translucent, sticks, clears the notch when installed */
+.top{position:sticky;top:0;z-index:10;padding-top:env(safe-area-inset-top);background:var(--bg);border-bottom:1px solid color-mix(in srgb,var(--line) 60%,transparent)}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:10px;height:56px}
+.brand{display:flex;align-items:center;gap:10px;min-width:0;min-height:44px;font-weight:700;letter-spacing:-.01em;color:var(--ink);text-decoration:none}
+.brand img{border-radius:10px;box-shadow:0 2px 8px -2px color-mix(in srgb,var(--accent) 60%,transparent)}
+.brand span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nav{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+@media (max-width:480px){.brand span{white-space:normal;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;font-size:15px;line-height:1.15}.more{padding:0 10px;font-size:13px}}
+.more{border:0;font:inherit;cursor:pointer;display:inline-flex;align-items:center;min-height:44px;padding:0 12px;border-radius:99px;color:var(--mut);font-size:14px;font-weight:600;text-decoration:none;background:var(--field)}
+.install{min-height:44px;padding:0 14px;border:0;border-radius:99px;font:inherit;font-size:14px;font-weight:700;color:#fff;background:var(--fill,var(--accent));cursor:pointer}
+
+/* Hero: the tagline on the app's color, cards ride up over it */
+.hero{position:relative;overflow:hidden;color:#fff;padding:22px 0 54px;background-color:color-mix(in srgb,var(--accent) 88%,#000);background-image:radial-gradient(90% 140% at 100% 0,rgba(255,255,255,.16),transparent 62%),var(--pat,none)}
+.hero h1{position:relative;z-index:1;margin:0;font-size:clamp(26px,7.2vw,34px);line-height:1.1;font-weight:800;letter-spacing:-.025em;text-wrap:balance}
+.hero-row{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.hero-art{display:block;flex:0 0 auto;position:relative;z-index:1;width:68px;height:68px;border-radius:18px;transform:rotate(6deg);box-shadow:0 12px 24px -12px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.14)}
+.hero p{position:relative;z-index:1;margin:14px 0 0;opacity:.88;font-size:15px}
+main.wrap{position:relative;z-index:1;margin-top:-34px;padding-bottom:8px}
+/* Plain text as the first thing must clear the hero that cards are meant to overlap. */
+main.wrap>p:first-child{margin-top:48px}
+.row>label:has(>input[type=checkbox]),.row>label:nth-child(odd of label:not([hidden])):nth-last-child(1 of label:not([hidden])){grid-column:1/-1}
+@media (max-width:999px){.row>.full-sm,.row>.full-sm+label:nth-last-child(1 of label:not([hidden])){grid-column:1/-1}}
+.item .row>label:first-child{grid-column:1/-1}.item .row>label:nth-child(n+2){grid-column:auto!important}
+h2{font-size:19px;line-height:1.25;letter-spacing:-.015em;margin:0 0 12px}
+h3{font-size:16px;margin:0 0 8px}
+.lead{color:var(--mut);margin:0 0 18px}
+.card.lead h2{color:var(--ink)}
+input[list]::-webkit-calendar-picker-indicator{display:none!important}
+
+.card{background:var(--card);border-radius:var(--r);padding:18px;margin:0 0 14px;box-shadow:var(--shadow);animation:rise .35s ease both}
+/* transform only: a throttled background tab must never leave a card invisible */
+@keyframes rise{from{transform:translateY(10px)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+.row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 12px;align-items:start}
+.row>.full,.row>label:has(>input[type=month]){grid-column:1/-1}
+.item .row{grid-template-columns:1fr 1fr 52px}
+.item .row>.rm{grid-row:span 3;align-self:end;min-height:52px;padding:0;margin-bottom:12px;font-size:18px}
+.row>.actions{grid-column:1/-1;margin:0 0 12px}
+
+/* Fields: filled, tall, 17px text so iOS never zooms */
+label{display:block;font-size:14px;font-weight:600;color:var(--ink);margin:0 0 12px}
+label:has(>input:not([type=checkbox],[type=radio]),>select,>textarea){display:flex;flex-direction:column}
+label:has(>input:not([type=checkbox],[type=radio]),>select,>textarea)>small{order:2;margin-top:6px}
+.row>label:has(>input:not([type=checkbox],[type=radio]),>select,>textarea){display:grid;grid-template-rows:subgrid;grid-row:span 3;align-items:end}
+.row>label>:is(input:not([type=checkbox],[type=radio]),select,textarea){grid-row:2}
+.row>label:has(>input:not([type=checkbox],[type=radio]),>select,>textarea)>small{grid-row:3;align-self:start}
+label small,.hint{display:block;font-weight:400;color:var(--mut);font-size:13px;line-height:1.35;margin-top:2px}
+input,select,textarea{display:block;width:100%;margin-top:6px;padding:13px 14px;font:inherit;font-size:17px;font-weight:500;color:var(--ink);background:var(--field);border:1.5px solid transparent;border-radius:14px;min-height:52px;transition:border-color .15s,background .15s,box-shadow .15s;appearance:none;-webkit-appearance:none}
+textarea{min-height:104px;resize:vertical}
+select{padding-right:36px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%23667085' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
+input::placeholder,textarea::placeholder{color:var(--mut);font-weight:400}
+@media (prefers-color-scheme:dark){input::placeholder,textarea::placeholder{color:color-mix(in srgb,var(--mut) 90%,var(--field))}}
+@media (prefers-color-scheme:dark){input,select,textarea{border-color:#343C4C}}
+input,select,textarea{min-width:0;max-width:100%}
+input:not([type=checkbox],[type=radio]),select{height:52px}
+input:focus,select:focus,textarea:focus{outline:0;background:var(--card);border-color:var(--accent-ink);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent)}
+input[type=checkbox],input[type=radio]{display:inline-block;flex:0 0 auto;width:24px;height:24px;min-height:0;margin:0 10px 0 0;padding:0;vertical-align:-6px;border-radius:8px;background:var(--field);border:1.5px solid color-mix(in srgb,var(--mut) 45%,transparent);cursor:pointer}
+input[type=radio]{border-radius:50%}
+label:where(:has(input[type=checkbox],input[type=radio])){min-height:44px;padding-block:10px;box-sizing:border-box}
+input[type=checkbox]:checked,input[type=radio]:checked{background:var(--fill,var(--accent)) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 12.5l4 4 8-9'/%3E%3C/svg%3E") center/18px no-repeat;border-color:var(--accent)}
+.actions label{display:inline-flex;align-items:center;margin:0;padding:8px 14px 8px 10px;border-radius:99px;background:var(--field);font-weight:500}
+.actions label input{margin-right:8px}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:52px;padding:12px 20px;font:inherit;font-weight:700;letter-spacing:-.01em;color:#fff;background:var(--fill,var(--accent));border:0;border-radius:14px;cursor:pointer;text-decoration:none;text-align:center;transition:transform .12s ease,filter .15s;box-shadow:0 6px 16px -8px color-mix(in srgb,var(--accent) 80%,transparent)}
+.btn:active,.install:active,.tabs button:active,.app:active{transform:scale(.97)}
+.btn:hover{filter:brightness(1.06)}
+.btn{white-space:nowrap}
+.btn.ghost{color:var(--ghost-ink);background:color-mix(in srgb,var(--accent) 12%,var(--card));box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--accent) 30%,transparent)}
+.btn.small{min-height:44px;padding:8px 14px;font-size:14px;border-radius:12px}
+.btn:disabled,.btn[aria-disabled=true]{opacity:.45;pointer-events:none;box-shadow:none}
+.btn.wa{background:#075E54;box-shadow:0 6px 16px -8px #075E54}
+.btn:focus-visible,a:focus-visible,.tabs button:focus-visible,.install:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 45%,transparent);outline-offset:2px}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.actions+.row,.actions+label,.actions+h2{margin-top:18px}
+.item>.actions{justify-content:flex-end;margin-top:0}
+.side>.actions{margin-bottom:14px}
+.side>.actions>.btn,.out .actions>.btn:not(.small){flex:1 1 auto}
+.side .actions .btn:not(.small){padding-inline:14px}
+@media (max-width:560px){.actions>.btn:not(.small){flex:1 1 150px}}
+
+/* Result box and the headline number */
+.out{background:var(--tint);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 22%,transparent)}
+.big{font-size:clamp(34px,10vw,44px);font-weight:800;line-height:1.05;letter-spacing:-.03em;color:var(--accent-ink);font-variant-numeric:tabular-nums;margin:2px 0 6px}
+
+.t{width:100%;border-collapse:collapse;font-size:15px}
+.t th{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)}
+.t th,.t td{padding:11px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+.t td.n,.t th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.t tr:last-child td{border-bottom:0}
+.t:not(:has(thead)) tr:last-child td:not(:empty),.t tfoot td{font-weight:700}
+.t tr:has(+tr.acts) td{border-bottom:0;padding-bottom:2px}
+.t tr.acts td{padding-top:0}.t tr.acts .actions{margin:6px 0 4px;justify-content:flex-end}
+.est{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.t th.n,.t td.n{padding-left:12px}
+.dl .actions .btn{flex:1 1 150px}
+/* Where the money goes: one bar, one legend. */
+.split{display:flex;gap:2px;height:16px;margin:12px 0 8px;border-radius:99px;overflow:hidden}
+.split span{min-width:5px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin:0 0 12px;font-size:12.5px;color:var(--mut)}
+.legend i{display:inline-block;width:10px;height:10px;margin-right:6px;border-radius:3px}
+.k1{background:var(--accent-ink)}.k2{background:#F59E0B}.k3{background:#EF4444}.k4{background:#8B5CF6}.k5{background:#64748B}
+.av{display:inline-grid;place-items:center;flex:0 0 auto;width:28px;height:28px;margin-right:8px;border-radius:50%;background:var(--accent);color:#fff;font-size:13px;font-weight:800;vertical-align:middle}
+[role=status]>p{display:inline-block;margin:0 0 12px;padding:6px 14px;border-radius:99px;background:var(--card);box-shadow:inset 0 0 0 1px var(--line);font-size:13px}
+[aria-live]>p{margin:0 0 14px;padding:26px;border-radius:var(--r);border:2px dashed color-mix(in srgb,var(--accent) 35%,var(--line));background:var(--card);color:var(--mut);font-size:15px;text-align:center}
+.dl>b{display:block;margin-bottom:4px}
+/* Shown while the block before it is still hidden: says what will appear there. */
+.if-empty{margin:14px 0 0;padding:22px;border-radius:14px;border:2px dashed color-mix(in srgb,var(--accent) 30%,var(--line));color:var(--mut);font-size:14px;text-align:center}
+:not([hidden]):not(:empty)+.if-empty{display:none}
+main.wrap:has(#clientes:empty) .card:has(>.actions>#borrar){display:none}
+@media (max-width:380px){.t{font-size:13px}.t th,.t td{padding:10px 2px}input[type=date]{padding-inline:10px}}
+@media (max-width:480px){.t.hide2 th:nth-child(2),.t.hide2 td:nth-child(2){display:none}}
+@media (max-width:480px){.t{font-size:13.5px}.t th{font-size:11px}.t th,.t td{padding:10px 4px}}
+.scroll{overflow-x:auto;margin:0 -6px;padding:0 6px;-webkit-overflow-scrolling:touch}
+.list{list-style:none;margin:0;padding:0}
+.list li{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 0;border-bottom:1px solid var(--line)}
+.list li:last-child{border-bottom:0;padding-bottom:2px}
+.list+label,.list+h2,.list+h3,.list+p{margin-top:18px}
+.list li>span:first-child{min-width:0;overflow-wrap:anywhere}
+.tag{display:inline-block;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:700;background:var(--field);color:var(--mut);white-space:nowrap}
+.tag.ok{background:color-mix(in srgb,var(--ok) 15%,var(--card));color:var(--ok)}
+.tag.bad{background:color-mix(in srgb,var(--bad) 14%,var(--card));color:var(--bad)}
+.tag.warn{background:color-mix(in srgb,#F59E0B 20%,var(--card));color:var(--warn)}
+.ok{color:var(--ok)}.bad{color:var(--bad)}.mut{color:var(--mut)}
+p.bad:empty,p.ok:empty{display:none}
+
+/* Tabs: a segmented control */
+.tabs{display:flex;gap:4px;margin:0 0 14px;padding:4px;border-radius:16px;background:var(--card);box-shadow:var(--shadow);overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{flex:1 0 auto;min-height:44px;padding:8px 14px;font:inherit;font-size:15px;font-weight:700;color:var(--mut);background:transparent;border:0;border-radius:12px;cursor:pointer;transition:background .2s,color .2s,transform .12s}
+.tabs button[aria-selected=true]{color:#fff;background:var(--fill,var(--accent));box-shadow:0 4px 12px -6px color-mix(in srgb,var(--accent) 80%,transparent)}
+
+[hidden]{display:none!important}
+.local{display:flex;gap:10px;align-items:flex-start;color:var(--mut);font-size:13px;line-height:1.4;margin:20px 4px}
+.local::before{content:"";flex:0 0 18px;height:18px;margin-top:1px;background:var(--mut);-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='5' y='11' width='14' height='10' rx='2'/%3E%3Cpath d='M8 11V7a4 4 0 018 0v4'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='5' y='11' width='14' height='10' rx='2'/%3E%3Cpath d='M8 11V7a4 4 0 018 0v4'/%3E%3C/svg%3E") center/contain no-repeat}
+.foot{margin-top:20px;padding:20px 0 calc(24px + env(safe-area-inset-bottom));color:var(--mut);font-size:12px;line-height:1.5}
+.foot p{margin:0 0 6px}
+.foot a{color:inherit}
+
+.hp{position:absolute!important;left:-9999px;width:1px;height:1px;opacity:0}
+label.check{display:flex;align-items:flex-start;font-weight:400;font-size:14px;line-height:1.4;color:var(--mut)}
+label.check input{margin-top:1px}
+.firma{display:flex;align-items:center;margin:18px 4px 0;font-weight:500;color:var(--mut)}
+.faq details{border-bottom:1px solid var(--line)}
+.faq details:last-child{border-bottom:0}
+.faq summary{display:flex;justify-content:space-between;gap:12px;padding:14px 0;font-weight:600;cursor:pointer;list-style:none}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";flex:0 0 auto;font-size:22px;line-height:1;color:var(--accent-ink)}
+.faq details[open] summary::after{content:"\2212"}
+.faq p{margin:0 0 14px;color:var(--mut);font-size:15px}
+.others{margin:22px 0 0}
+.others h2{margin:0 4px 10px}
+.strip{display:flex;gap:10px;overflow-x:auto;margin:0 -16px;padding:2px 16px 14px;scroll-snap-type:x proximity;scroll-padding:0 16px;scrollbar-width:none}
+.strip::-webkit-scrollbar{display:none}
+.strip a{flex:0 0 132px;scroll-snap-align:start;display:flex;flex-direction:column;gap:8px;padding:14px;border-radius:18px;background:var(--card);box-shadow:var(--shadow);color:var(--ink);font-size:14px;font-weight:700;line-height:1.25;text-decoration:none}
+.strip img{border-radius:13px}
+@media (max-width:999px){.strip{-webkit-mask-image:linear-gradient(90deg,#000 84%,transparent);mask-image:linear-gradient(90deg,#000 84%,transparent)}}
+
+/* Hub: a home screen of apps */
+.apps{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.app{display:flex;flex-direction:column;gap:10px;color:inherit;text-decoration:none;margin:0;padding:16px;transition:transform .12s ease}
+.app img{border-radius:18px;box-shadow:0 8px 18px -10px rgba(16,24,40,.5)}
+.app b{display:block;color:var(--ink);font-size:17px;letter-spacing:-.01em;margin-bottom:2px}
+.app span{font-size:14px;line-height:1.4;color:var(--mut)}
+
+/* Round 9 */
+.vacio{margin:14px 0 0;padding:22px;border-radius:14px;border:2px dashed color-mix(in srgb,var(--accent) 30%,var(--line));color:var(--mut);font-size:14px;text-align:center}
+.lnk{border:0;background:none;padding:0;margin:0;font:inherit;font-weight:600;color:var(--accent-ink);text-decoration:underline;cursor:pointer}
+.kpi{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}.kpi p{margin:0}
+label:has(>select:empty){display:none!important}
+.push{margin-top:auto}
+.scroll{margin:0;padding:0}
+.t th:first-child,.t td:first-child{padding-left:0}.t th:last-child,.t td:last-child{padding-right:0}
+.t tr.acts .actions{justify-content:flex-start}
+/* Button groups: WhatsApp takes a row, the rest pair up; a button left alone takes a row too. */
+.side>.actions,.two>div>.actions:not(.end){display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+:is(.side>.actions,.two>div>.actions:not(.end))>:is(.wa,button:only-of-type,button:last-child:nth-child(even)){grid-column:1/-1}
+.actions.end{justify-content:flex-start}.out .actions.end>.btn:not(.small),.actions.end>.btn{flex:0 0 auto}
+.list li:has(>.dl){align-items:stretch}
+.dl{display:flex;flex-direction:column;width:100%}.dl>.tag{align-self:flex-start}.dl>.actions{margin-top:auto;padding-top:10px}
+@media (max-width:480px){.more{padding:0 8px;font-size:12.5px}}
+/* Round 10 */
+.side.wide>[aria-live] .card{display:flex;flex-direction:column}
+.side.wide>[aria-live] .card>.actions{margin-top:auto;padding-top:12px}
+.side.wide>[aria-live] .card .actions .btn{flex:1 1 100%}
+.side.wide .list li:last-child{padding-bottom:13px}
+.card>.actions:first-child{margin-top:0}
+.firma{margin-bottom:16px}
+:is(.side>.actions,.two>div>.actions:not(.end)) .btn{white-space:normal;padding-inline:10px;text-align:center}
+@media (max-width:999px){.two>div+div{margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}}
+@media (max-width:380px){.t.hide2{font-size:12px}.t.hide2 th{font-size:10px;letter-spacing:0}}
+/* Round 12: on the narrowest phones a half-width select cuts its text, so fields stack. */
+@media (max-width:380px){.row{grid-template-columns:minmax(0,1fr)}}
+/* Installed (standalone): no browser chrome, so no need to sell the install */
+@media (display-mode:standalone){.install{display:none!important}}
+@media (min-width:700px){.hero{padding:34px 0 64px}.card{padding:22px}}
+@media (min-width:900px){.hub .wrap{max-width:960px}.hub .apps{grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:16px}}
+/* Wide screens: two columns of cards and the app's art in the hero, not a phone column stranded in the middle. */
+@media (min-width:1000px){
+  .wrap,.hub .wrap{max-width:1080px}
+  .hub .apps{grid-template-columns:repeat(5,1fr)}
+  .hero{padding:44px 0 82px}
+  .hero h1{font-size:46px;max-width:660px}
+  .hero-row{gap:32px}
+  .hero-art{display:block;flex:0 0 auto;position:relative;z-index:1;width:168px;height:168px;margin:-10px 28px -30px 0;border-radius:40px;transform:rotate(6deg);box-shadow:0 26px 50px -22px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.14)}
+  /* Two columns of work. Anything marked .span, the questions and the notice band run full width below,
+     so no column is padded with a stretched card. */
+  main.wrap:not(.hub main),main.wrap>section:not(.card,.others){display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:20px;align-items:start;grid-auto-flow:row dense}
+  main.wrap:where(:not(.hub main))>*,main.wrap>:where(section:not(.card,.others))>*{grid-column:1;min-width:0}
+  main.wrap>section:not(.card),main.wrap>.span,main.wrap>.tabs,main.wrap>.others,main.wrap>.below,main.wrap>.firma,main.wrap>.local,main.wrap>p:first-child,main.wrap>p.actions,main.wrap>#bkMsg{grid-column:1/-1}
+  main.wrap>.side{grid-column:2;grid-row:span 40;align-self:stretch}
+  main.wrap>.side:not(.wide){display:flex;flex-direction:column}
+  /* .pair: one card on each side of one row, same height. A tab panel is a pair too (form | result). */
+  main.wrap>.side.pair{grid-row:auto}
+  main.wrap>.side.pair>.card{flex:1}
+  main.wrap:has(>.side.pair)>.card:not(.span){align-self:stretch}
+  main.wrap>section:not(.card,.others)>*{align-self:stretch}
+  main.wrap>section:not(.card,.others)>.out{grid-column:2;grid-row:1}
+  /* What goes in an empty column, said in a box that fills it. */
+  .side[data-empty]:not([data-empty=""]):not(:has(>:not([hidden])))::before,.side[data-hint]:has(>.card[hidden])::after,main.wrap>section:not(.card,.others):not(:has(>.out:not([hidden])))::after{content:attr(data-empty);flex:1;display:grid;place-items:center;min-height:140px;padding:26px;border-radius:var(--r);border:2px dashed color-mix(in srgb,var(--accent) 35%,var(--line));color:var(--mut);font-size:15px;text-align:center;background:var(--card)}
+  .side[data-hint]:has(>.card[hidden])::after{content:attr(data-hint)}
+  main.wrap>section:not(.card,.others):not(:has(>.out:not([hidden])))::after{content:"Completa los datos y aquí aparece tu resultado.";grid-column:2;grid-row:1;margin-bottom:14px}
+  .below{display:block;margin-top:6px}
+  .faq{display:grid;grid-template-columns:1fr 1fr;column-gap:36px;align-items:start}
+  .faq>h2{grid-column:1/-1}
+  /* Notice band: copy and the two consents on the left, the address and the button on the right. */
+  .below>#lead{display:grid;grid-template-columns:1.2fr 1fr;column-gap:32px;align-items:start}
+  .below>#lead>form{display:contents}
+  .below>#lead>h2{grid-column:1;grid-row:1}
+  .below>#lead>.hint{grid-column:1;grid-row:2;margin-bottom:10px}
+  .below>#lead label.check{grid-column:1}
+  .below>#lead form>label:not(.check){grid-column:2;grid-row:1/span 3}
+  .below>#lead .actions{grid-column:2;grid-row:4;margin-top:0}
+  .below>#lead #leadMsg{grid-column:2;grid-row:5}
+  /* .wide: a full-width form with its results below (Farmacia's list, Auto's vehicles). */
+  main.wrap>.side.wide{grid-column:1/-1;grid-row:auto}
+  main.wrap:has(>.side.wide)>.card{grid-column:1/-1}
+  .side.wide>[aria-live]{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:0 20px;align-items:stretch}
+  .side.wide>[aria-live]>p{grid-column:1/-1}
+  .side.wide .list{display:grid;grid-template-columns:1fr 1fr;column-gap:36px}
+  .side.wide .list li:nth-last-child(2):nth-child(odd){border-bottom:0}
+  .side.wide .list li{align-items:stretch}
+  #cNotas{min-height:168px}
+  /* Round 9 */
+  .faq{display:block;columns:2;column-gap:36px}.faq>h2{column-span:all}.faq details{break-inside:avoid}
+  main.wrap>section:not(.card,.others)>.out{align-self:start}
+  main.wrap>section:not(.card,.others):not(:has(>.out:not([hidden])))::after{align-self:stretch}
+  .side[data-empty]:not([data-empty=""]):not(:has(>:not([hidden])))::before,.side[data-hint]:has(>.card[hidden])::after{margin-bottom:14px}
+  .two{display:grid;grid-template-columns:1fr 1fr;column-gap:36px;align-items:start}
+  main.wrap>.side.pair>.card,main.wrap:has(>.side.pair)>.card:not(.span){display:flex;flex-direction:column}
+  .card>.if-empty{flex:1;display:grid;place-items:center}
+  .side.wide>[aria-live]{grid-template-columns:repeat(auto-fit,minmax(336px,1fr))}
+  .side.wide>[aria-live] .card .actions .btn{flex:1 1 100%}
+  .tabs{max-width:calc(50% - 10px)}
+  .strip{flex-wrap:wrap;overflow:visible;margin:0;padding:2px 0 14px}
+  .strip a{flex:0 0 calc((100% - 80px)/9);min-width:0}
+}
+@media print{.top,.foot,.actions,.tabs,.local,.noprint,.hero{display:none!important}body{background:#fff;color:#000}main.wrap{margin-top:0}.card{box-shadow:none;padding:0;animation:none}}
+/* Website around each app: section nav, guides, generated pages, community (site.mjs) */
+.top .nav a{white-space:nowrap}
+.sitenav{background:var(--card);border-bottom:1px solid var(--line)}
+.sitenav .wrap{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+.sitenav .wrap::-webkit-scrollbar{display:none}
+.sitenav a{flex:0 0 auto;display:inline-flex;align-items:center;min-height:44px;padding:0 10px;color:var(--mut);font-size:15px;font-weight:600;text-decoration:none;border-bottom:3px solid transparent}
+.sitenav a[aria-current]{color:var(--ink);border-bottom-color:var(--accent)}
+.site .hero{padding:18px 0 50px}
+.site .hero h1{font-size:clamp(25px,6.4vw,32px)}
+.crumb{position:relative;z-index:1;margin:0 0 8px;font-size:13px;opacity:.85}
+.crumb a{color:inherit}
+.hero .crumb+h1+p,.site .hero p{margin-top:10px}
+.prose{font-size:17px;line-height:1.6}
+.prose h2{margin:26px 0 8px;font-size:21px;line-height:1.25;letter-spacing:-.01em}
+.prose h3{margin:20px 0 6px;font-size:18px}
+.prose>:first-child{margin-top:0}
+.prose p,.prose ul,.prose ol{margin:0 0 12px}
+.prose ul,.prose ol{padding-left:22px}
+.prose li{margin:4px 0}
+.prose a{color:var(--accent-ink);text-underline-offset:2px}
+.prose .scroll{margin:6px 0 14px}
+.prose code{font-size:.9em;background:var(--field);padding:1px 5px;border-radius:6px}
+.note{margin:14px 0;padding:12px 14px;border-radius:12px;background:var(--tint);border-left:4px solid var(--accent);font-size:16px}
+.small{font-size:13px}
+.links{list-style:none;margin:0;padding:0}
+.links li+li{border-top:1px solid var(--line)}
+.links a{display:flex;flex-direction:column;gap:2px;padding:12px 0;min-height:44px;color:var(--ink);text-decoration:none}
+.links b{color:var(--accent-ink)}
+.links span{color:var(--mut);font-size:15px}
+.cta{background:var(--tint)}
+.cta h2,.ask h2{margin:0 0 6px;font-size:20px}
+.cta p,.ask p{margin:0 0 12px;color:var(--mut)}
+.community{min-height:160px}
+@media (min-width:1000px){
+  body.site main.wrap{display:block}
+  .site .wrap{max-width:780px}
+  .site .hero{padding:34px 0 72px}
+  .site .hero h1{font-size:40px;max-width:780px}
+}
+.msg{margin:6px 0 14px;padding:12px 14px;border-radius:12px;background:var(--field);font:inherit;font-size:16px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
+.byline{margin:0 0 14px;color:var(--mut);font-size:14px}
+.byline a{color:inherit;font-weight:600}
+.fix{margin:22px 0 0;padding-top:14px;border-top:1px solid var(--line);color:var(--mut);font-size:15px}
+
+/* Round 13: a first screen of its own per app (live result in the hero, its own texture) and a better hub */
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.hero .wrap{position:relative}
+/* Live result: what the tool says right now, above the fold, updated as you type */
+.live{position:relative;z-index:1;display:grid;grid-template-columns:minmax(0,1fr);gap:2px;margin-top:16px;padding:13px 16px 14px;border-radius:18px;background:rgba(0,0,0,.24);box-shadow:inset 0 0 0 1px rgba(255,255,255,.2)}
+.live-k{grid-column:1/-1;font-size:12.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;opacity:.94}
+.live-v{font-size:clamp(30px,8.8vw,38px);font-weight:800;letter-spacing:-.03em;line-height:1.05;font-variant-numeric:tabular-nums;white-space:nowrap}
+.live-s{font-size:15px;line-height:1.35;font-weight:500;opacity:1}
+.live.idle .live-v{opacity:.92}
+.live.idle[data-idle]:not([data-idle^="$"]) .live-v{font-size:26px;line-height:1.3;opacity:1}
+.live.chip{display:inline-flex;width:fit-content;align-items:baseline;gap:8px;margin-top:14px;padding:8px 16px;border-radius:99px}
+.live.chip .live-v{font-size:22px;line-height:1.2}
+.live.chip .live-s{font-size:14px}
+.live.chip .live-s::before{content:"·";margin-right:8px}
+.hero:has(.live) h1{font-size:clamp(23px,6.2vw,30px)}
+.hero:has(.live) .hero-art{width:56px;height:56px;border-radius:15px}
+@media (min-width:1000px){.hero:has(.live) h1{font-size:42px}.hero:has(.live) .hero-art{width:140px;height:140px;border-radius:34px}.live{max-width:560px}}
+/* Per-app texture in the hero band */
+[data-app=vaquita]{--pat:radial-gradient(rgba(255,255,255,.16) 1.6px,transparent 1.8px) 0 0/18px 18px}
+[data-app=sueldo-liquido]{--pat:repeating-linear-gradient(135deg,rgba(255,255,255,.07) 0 2px,transparent 2px 14px)}
+[data-app=farmacia-de-turno]{--pat:linear-gradient(rgba(255,255,255,.08) 1px,transparent 1px) 0 0/22px 22px,linear-gradient(90deg,rgba(255,255,255,.08) 1px,transparent 1px) 0 0/22px 22px}
+[data-app=auto-al-dia]{--pat:repeating-linear-gradient(90deg,rgba(255,255,255,.14) 0 22px,transparent 22px 44px) 0 100%/100% 3px no-repeat}
+[data-app=boleta-honorarios]{--pat:repeating-linear-gradient(0deg,rgba(255,255,255,.08) 0 1px,transparent 1px 16px)}
+[data-app=cotizador]{--pat:radial-gradient(circle at 100% 100%,transparent 0 46px,rgba(255,255,255,.09) 46px 48px,transparent 48px 74px,rgba(255,255,255,.07) 74px 76px,transparent 76px)}
+[data-app=gastos-comunes]{--pat:linear-gradient(rgba(255,255,255,.1) 2px,transparent 2px) 0 0/28px 28px,linear-gradient(90deg,rgba(255,255,255,.1) 2px,transparent 2px) 0 0/28px 28px}
+[data-app=libreta-fiados]{--pat:repeating-linear-gradient(90deg,rgba(255,255,255,.1) 0 3px,transparent 3px 10px) 0 0/100% 38% no-repeat}
+[data-app=pension-alimentos]{--pat:radial-gradient(circle at 92% 20%,transparent 0 30px,rgba(255,255,255,.1) 30px 32px,transparent 32px 56px,rgba(255,255,255,.08) 56px 58px,transparent 58px 84px,rgba(255,255,255,.06) 84px 86px,transparent 86px)}
+[data-app=reajuste-arriendo]{--pat:repeating-linear-gradient(60deg,rgba(255,255,255,.07) 0 2px,transparent 2px 18px),repeating-linear-gradient(-60deg,rgba(255,255,255,.07) 0 2px,transparent 2px 18px)}
+/* Vaquita: the cow tile sits in the hero beside the title; it never leaves the band, so it covers no text */
+[data-app=vaquita] .hero:has(.live) .hero-art{width:68px;height:68px;border-radius:19px;box-shadow:0 12px 22px -12px rgba(0,0,0,.6),0 0 0 3px rgba(255,255,255,.9)}
+[data-app=vaquita] .hero-row{align-items:flex-start}
+@media (min-width:1000px){[data-app=vaquita] .hero:has(.live) .hero-art{width:150px;height:150px;border-radius:36px}}
+
+/* Stepper */
+h2.step{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+h2.step .n{display:inline-grid;place-items:center;flex:0 0 auto;width:32px;height:32px;border-radius:50%;background:var(--field);color:var(--accent-ink);font-size:16px;font-weight:800;box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--accent) 35%,transparent)}
+h2.step.done .n{background:var(--fill,var(--accent));color:#fff;box-shadow:none;font-size:0}
+h2.step.done .n::after{content:"";width:16px;height:16px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7'/%3E%3C/svg%3E") center/contain no-repeat}
+.step-card{position:relative}
+.step-card:has(.step)::before{content:"";position:absolute;left:34px;top:-15px;width:2px;height:15px;background:color-mix(in srgb,var(--accent) 30%,var(--line))}
+main.wrap>.step-card:first-child::before{display:none}
+.side>.step-card::before{display:none}
+@media (min-width:1000px){.step-card::before{display:none}}
+/* Add button inside the input */
+.inwrap{position:relative;display:block;margin-top:6px}
+.inwrap input{margin:0;padding-right:116px}
+.inwrap .add{position:absolute;right:4px;top:4px;display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 14px 0 10px;border:0;border-radius:11px;font:inherit;font-size:15px;font-weight:700;color:#fff;background:var(--fill,var(--accent));cursor:pointer}
+.inwrap .add i{font-style:normal;font-size:20px;line-height:1;font-weight:600}
+.inwrap .add:active{transform:scale(.96)}
+.inwrap .add:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 45%,transparent);outline-offset:2px}
+/* Friendly empty states */
+.if-empty.fun{display:flex;flex-direction:column;align-items:center;gap:4px;border-color:color-mix(in srgb,var(--accent) 35%,var(--line));background:color-mix(in srgb,var(--accent) 5%,var(--card))}
+.if-empty.fun b{color:var(--ink);font-size:16px}
+.ill{display:block;color:var(--accent-ink);margin:0 auto 6px}
+.empty{display:flex;flex-direction:column;align-items:center;gap:4px}
+.empty b{color:var(--ink);font-size:17px}
+.picks{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:12px}
+.pick{min-height:44px;padding:0 16px;border:0;border-radius:99px;font:inherit;font-size:15px;font-weight:600;color:var(--ghost-ink);background:color-mix(in srgb,var(--accent) 12%,var(--card));box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--accent) 30%,transparent);cursor:pointer}
+.pick:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 45%,transparent);outline-offset:2px}
+/* Collapsed advanced fields */
+details.opts{margin:6px 0 0;border-top:1px solid var(--line)}
+details.opts>summary{display:flex;align-items:center;justify-content:space-between;min-height:52px;padding:0;font-weight:700;color:var(--accent-ink);cursor:pointer;list-style:none}
+details.opts>summary::-webkit-details-marker{display:none}
+details.opts>summary::after{content:"";width:16px;height:16px;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E") center/contain no-repeat;transition:transform .2s}
+details.opts[open]>summary::after{transform:rotate(180deg)}
+details.opts>summary:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 45%,transparent);outline-offset:2px;border-radius:8px}
+details.opts[open]{padding-bottom:2px}
+/* Farmacia: search with its freshness chip */
+.srch{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.srch label{margin:0}
+.stamp{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:99px;font-size:12.5px;font-weight:700;white-space:nowrap;background:var(--field);color:var(--mut)}
+.stamp::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.stamp.warn{background:color-mix(in srgb,#F59E0B 22%,var(--card));color:var(--warn)}
+.stamp.ok{background:color-mix(in srgb,var(--ok) 15%,var(--card));color:var(--ok)}
+#comuna{margin-top:10px;padding-left:46px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23667085' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-4-4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:15px center}
+#comuna::-webkit-search-cancel-button{-webkit-appearance:none}
+[role=status]>p.warn{background:color-mix(in srgb,#F59E0B 14%,var(--card));color:var(--warn);box-shadow:inset 0 0 0 1px color-mix(in srgb,#F59E0B 40%,transparent);border-radius:14px;padding:10px 14px;font-size:14px;line-height:1.4}
+[role=status]>p.warn a{color:inherit}
+
+/* Hub: one row per app, tinted with its own color, one-line taglines */
+.hub .apps{display:grid;grid-template-columns:1fr;gap:10px}
+.app{--c:var(--accent);position:relative;flex-direction:row;align-items:center;gap:14px;padding:12px 14px;min-height:80px;background:color-mix(in srgb,var(--c) 8%,var(--card));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c) 20%,var(--line))}
+.app::after{content:"";flex:0 0 auto;width:16px;height:16px;margin-left:auto;background:color-mix(in srgb,var(--c) 70%,var(--mut));-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 3l5 5-5 5'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 3l5 5-5 5'/%3E%3C/svg%3E") center/contain no-repeat}
+.app img{flex:0 0 auto}
+.app .tx{min-width:0;flex:1}
+.app b{margin:0 0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.app small{display:block;font-size:14px;line-height:1.3;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.app:focus-visible{outline:3px solid color-mix(in srgb,var(--c) 55%,transparent);outline-offset:2px}
+@media (min-width:640px){.hub .apps{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (min-width:1000px){.hub .apps{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.hub .hubfaq{margin-top:44px}
+.hubfaq h3{margin:16px 0 4px}
+.hubfaq h2+h3{margin-top:0}
+.hubfaq p{margin:0;color:var(--mut)}
+.hubfoot{margin-top:44px;padding-top:28px;background:var(--card);border-top:1px solid var(--line)}
+.hubfoot .fb{font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.01em}
+.hubfoot .fl{display:grid;grid-template-columns:1fr 1fr;gap:0 16px;margin:14px 0 18px}
+.hubfoot .fl a{display:flex;align-items:center;min-height:44px;color:var(--ink);font-size:14px;font-weight:600;text-decoration:none;border-bottom:1px solid var(--line)}
+@media (min-width:640px){.hubfoot .fl{grid-template-columns:repeat(3,1fr)}}
+.dg-credit{margin-top:10px}
+
+/* Round 3: worked examples, a signature per app, a cleaner Sueldo switch, Auto plate form, richer hub */
+.live.ex{background-color:rgba(0,0,0,.18);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.5);background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.05) 0 8px,transparent 8px 16px)}
+.live::after{content:"";position:absolute;right:14px;top:50%;width:44px;height:48px;transform:translateY(-50%);background:var(--sig,none) center/contain no-repeat;pointer-events:none}
+[data-app] .live{padding-right:72px}
+[data-app=sueldo-liquido]{--sig:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 52'%3E%3Cpath d='M8 35v9a16 6 0 0032 0v-9' fill='%23EAB308' stroke='%23A16207' stroke-width='2'/%3E%3Cellipse cx='24' cy='35' rx='16' ry='6' fill='%23FDE047' stroke='%23A16207' stroke-width='2'/%3E%3Cpath d='M8 26v9a16 6 0 0032 0v-9' fill='%23EAB308' stroke='%23A16207' stroke-width='2'/%3E%3Cellipse cx='24' cy='26' rx='16' ry='6' fill='%23FDE047' stroke='%23A16207' stroke-width='2'/%3E%3Cpath d='M8 17v9a16 6 0 0032 0v-9' fill='%23EAB308' stroke='%23A16207' stroke-width='2'/%3E%3Cellipse cx='24' cy='17' rx='16' ry='6' fill='%23FDE047' stroke='%23A16207' stroke-width='2'/%3E%3Cpath d='M24 12v10M21 14.5h5a2 2 0 010 4h-4a2 2 0 000 4h5' fill='none' stroke='%23A16207' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E")}
+[data-app=auto-al-dia]{--sig:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 52'%3E%3Cpath d='M18 4h12l14 46H4z' fill='%230F2A33' stroke='%23fff' stroke-opacity='.55' stroke-width='2' stroke-linejoin='round'/%3E%3Cpath d='M24 8v6M24 20v8M24 34v10' stroke='%23FDE047' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E")}
+[data-app=farmacia-de-turno]{--sig:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 52'%3E%3Cpath d='M30 4a20 20 0 1017 28A16 16 0 0130 4z' fill='%23FDE047'/%3E%3Cpath d='M13 30h6v-6h6v6h6v6h-6v6h-6v-6h-6z' fill='%23fff'/%3E%3Cpath d='M40 8l1.6 3.4L45 13l-3.4 1.6L40 18l-1.6-3.4L35 13l3.4-1.6z' fill='%23fff'/%3E%3C/svg%3E")}
+[data-app=vaquita]{--sig:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 52'%3E%3Crect x='3' y='5' width='42' height='42' rx='12' fill='%23fff'/%3E%3Cpath d='M3 19c0-8 5-14 13-14 6 0 8 6 4 10s-8 3-9 9-8 6-8-5zM27 47c-6-2-5-9 1-11s9-8 15-4v3c0 8-6 13-16 12zM32 14c4-4 11 0 9 6-2 5-9 4-10 0z' fill='%231F2937'/%3E%3C/svg%3E")}
+[data-app=sueldo-liquido] .hero{padding-bottom:18px}
+[data-app=sueldo-liquido] main.wrap{margin-top:16px}
+[data-app=sueldo-liquido] .tabs{margin-top:16px}
+[data-app=vaquita] .live::after{transform:translateY(-50%) rotate(8deg)}
+[data-app=farmacia-de-turno] .hero{background-image:radial-gradient(90% 140% at 100% 0,rgba(255,255,255,.16),transparent 62%),radial-gradient(circle at 78% 22%,rgba(253,224,71,.5) 0 2px,transparent 3px),radial-gradient(circle at 92% 60%,rgba(255,255,255,.55) 0 1.5px,transparent 2.5px),var(--pat,none)}
+@media (min-width:1000px){[data-app=sueldo-liquido] .hero{padding-bottom:36px}}
+/* Auto al Día: the plate is the motif */
+.plate{display:inline-block;padding:1px 12px 1px 14px;border-radius:7px;background:#fff;color:#111;border:2px solid #1F2937;border-left:9px solid #1D4ED8;font:800 .95em/1.35 ui-monospace,"SF Mono",Consolas,monospace;letter-spacing:.1em;vertical-align:1px}
+.apodo{margin-left:6px;color:var(--mut);font-weight:600}
+input.plate-in{text-align:center;text-transform:uppercase;font-family:ui-monospace,"SF Mono",Consolas,monospace;font-weight:800;letter-spacing:.14em;color:#111;background:#fff;border:2px solid #1F2937;border-left:10px solid #1D4ED8;border-radius:10px}
+input.plate-in::placeholder{color:#6B7280;font-weight:700;letter-spacing:.14em}
+input.plate-in:focus{border-color:#1F2937;border-left-color:#1D4ED8}
+.demo h2{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.demo{background-image:linear-gradient(135deg,color-mix(in srgb,var(--accent) 5%,transparent),transparent 60%)}
+.local.src{font-size:12px;opacity:.9}
+/* Hub */
+.byline{font-size:13px}
+.hub .hero{--pat:radial-gradient(rgba(255,255,255,.08) 1.5px,transparent 1.8px) 0 0/22px 22px}
+.fan{position:relative;z-index:1;display:flex;align-items:center;margin-top:18px}
+.fan img{width:54px;height:54px;border-radius:15px;margin-left:-8px;box-shadow:0 8px 16px -8px rgba(0,0,0,.7),0 0 0 2.5px #1F2937}
+.fan img:first-child{margin-left:0}
+.fan img:nth-child(1){transform:rotate(-8deg)}.fan img:nth-child(2){transform:rotate(-2deg) translateY(-3px)}.fan img:nth-child(3){transform:rotate(4deg)}.fan img:nth-child(4){transform:rotate(10deg) translateY(-2px)}
+.fan span{margin-left:14px;font-size:14px;font-weight:600;opacity:.92}
+.bdg{display:inline-block;vertical-align:2px;margin-left:6px;padding:2px 8px;border-radius:99px;font-style:normal;font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;background:color-mix(in srgb,var(--c) 20%,var(--card));color:color-mix(in srgb,var(--c) 55%,var(--ink))}
+.fpts{display:flex;flex-wrap:wrap;gap:6px 14px;margin:12px 0 0;padding:0;list-style:none}
+.fpts li{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--ink)}
+.fpts li::before{content:"";width:14px;height:14px;border-radius:50%;background:var(--ok) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 12.5l4 4 8-9'/%3E%3C/svg%3E") center/80% no-repeat}
+.hubfoot .fh{margin:20px 0 0;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.hubfoot .fx{margin:6px 0 18px;line-height:2}
+.empty{text-align:center}
+
+/* Round 4 */
+/* Header actions: real buttons (icon + label), the same on every tool */
+.more{gap:7px;padding:0 14px 0 12px;color:var(--ink);font-weight:700;background:var(--card);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--accent) 38%,var(--line));transition:background .15s,transform .12s}
+.more svg{flex:0 0 auto;color:var(--accent-ink)}
+.more:hover{background:var(--tint)}
+.more:active{transform:scale(.97)}
+.more:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 45%,transparent);outline-offset:2px}
+@media (max-width:480px){.more{gap:6px;padding:0 11px 0 9px;font-size:13px}.more svg{width:16px;height:16px}.nav{gap:6px}}
+.hub .top .more{padding:0 4px;color:var(--mut);background:none;box-shadow:none;font-weight:600}
+.hub .brand .mark{flex:0 0 auto;border-radius:10px;box-shadow:0 2px 8px -2px rgba(31,41,55,.5)}
+/* Site tabs: always fit; if they ever do not, scroll with snap and a fade on the side with more */
+@property --nfl{syntax:"<length>";inherits:false;initial-value:0px}
+@property --nfr{syntax:"<length>";inherits:false;initial-value:0px}
+.sitenav .wrap{gap:2px;scroll-snap-type:x proximity;scroll-padding-inline:16px;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 var(--nfl),#000 calc(100% - var(--nfr)),transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 var(--nfl),#000 calc(100% - var(--nfr)),transparent 100%)}
+.sitenav a{scroll-snap-align:start}
+@media (max-width:430px){.sitenav a{padding:0 9px;font-size:14.5px}}
+@keyframes nfl{from{--nfl:0px}to{--nfl:30px}}
+@keyframes nfr{from{--nfr:30px}to{--nfr:0px}}
+@supports (animation-timeline:scroll(self inline)){
+  .sitenav .wrap{animation:nfl linear both,nfr linear both;animation-timeline:scroll(self inline),scroll(self inline);animation-range:0 30px,calc(100% - 30px) 100%}
+}
+/* Farmacia: the idle line is readable (white on dark green) and points at the search */
+[data-app=farmacia-de-turno] .live{background:rgba(0,0,0,.3)}
+[data-app=farmacia-de-turno] .live.idle:not([data-idle^="$"]) .live-v::after{content:"\2193"/"";margin-left:10px;color:#FDE047}
+.ill.night{margin-bottom:10px;filter:drop-shadow(0 8px 12px rgba(15,79,40,.35))}
+/* Vaquita: the second empty state is a quiet row, not another dashed invitation */
+.if-empty.fun.soft{border:0;align-items:flex-start;gap:0;padding:15px 16px 15px 52px;text-align:left;background-color:var(--field);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='%23667085' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 3h12v18l-3-2-3 2-3-2-3 2z'/%3E%3Cpath d='M9 8h6M9 12h6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:16px 16px}
+/* Auto al Día: label and status on one line, the date under its label */
+[data-app=auto-al-dia] .dl{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:12px;row-gap:4px;align-items:center;flex:1;min-width:0}
+[data-app=auto-al-dia] .dl>b{margin:0}
+[data-app=auto-al-dia] .dl br{display:none}
+[data-app=auto-al-dia] .dl>.mut,[data-app=auto-al-dia] .dl>.actions{grid-column:1/-1}
+/* Hub: one featured tile, then sections */
+.hub .apps.feat{grid-template-columns:minmax(0,1fr)}
+.app.featured{min-height:108px;padding:18px 16px;background:linear-gradient(135deg,color-mix(in srgb,var(--c) 20%,var(--card)),color-mix(in srgb,var(--c) 6%,var(--card)));box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--c) 40%,var(--line)),0 12px 24px -18px var(--c)}
+.app.featured img{width:72px;height:72px;border-radius:21px}
+.app.featured b{font-size:19px;white-space:normal;line-height:1.2}
+.live-s{text-wrap:balance}
+.app.featured small{font-size:15px}
+.grp{margin-top:24px}
+.gh{display:flex;align-items:center;gap:12px;margin:0 4px 10px;font-size:12.5px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--mut)}
+.gh::after{content:"";flex:1;height:1px;background:var(--line)}
+/* Notes and footer: one quiet system */
+main.wrap>#dataNote{margin:8px 4px 20px;padding:2px 0 2px 14px;border-left:3px solid color-mix(in srgb,var(--accent) 35%,var(--line));font-size:12.5px;line-height:1.55;color:var(--mut);max-width:62ch}
+.local{margin:22px 0;padding:14px 16px;border-radius:14px;background:color-mix(in srgb,var(--field) 70%,transparent);font-size:12.5px;line-height:1.55}
+.local.src{opacity:1;font-size:12.5px}
+.foot:not(.hubfoot){margin-top:28px;padding-top:22px;background:var(--card);border-top:1px solid var(--line);font-size:12.5px;line-height:1.6}
+.foot:not(.hubfoot) p{max-width:62ch}
+.foot:not(.hubfoot) .dg-credit{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-weight:600}
+/* Newsletter: the two consents read as two deliberate choices */
+#lead{background:linear-gradient(160deg,color-mix(in srgb,var(--accent) 8%,var(--card)),var(--card) 55%);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 20%,var(--line))}
+#lead .hint{margin-bottom:14px}
+#lead label.check{align-items:flex-start;margin:0 0 8px;padding:12px 14px;border-radius:12px;background:var(--field);font-size:12.5px;line-height:1.5}
+#lead label.check input{margin:0 12px 0 0}
+#lead label.check:has(#leadBiz){color:var(--ink);font-size:14px;line-height:1.4}
+#lead .actions{margin-top:14px}
+/* Phones: the tool name keeps one line; the header buttons are icon-only (name from aria-label) */
+@media (max-width:480px){.top .brand span{display:block;-webkit-line-clamp:unset;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:16px;line-height:1.2}}
+@media (max-width:429px){
+  .top .more:not(.byline){width:44px;min-width:44px;padding:0;justify-content:center}
+  .top .more:not(.byline) span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .more svg{width:20px;height:20px}
+  .install{padding:0 8px;font-size:12.5px}
+  .top .nav{gap:4px}
+  .top .brand{gap:8px}
+  .top .brand span{font-size:14.5px;letter-spacing:-.02em}
+}
+
+/* Round 5 */
+/* Hub: the other apps are two-column tiles on a phone; the hero fan jumps to them */
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+.applist{scroll-margin-top:12px}
+a.fan{width:fit-content;margin-left:-4px;padding:4px 6px 4px 4px;border-radius:18px;color:inherit;text-decoration:none;-webkit-tap-highlight-color:transparent}
+a.fan span{display:inline-flex;align-items:center;gap:2px;min-height:36px;padding:0 14px;border-radius:99px;background:rgba(255,255,255,.16);box-shadow:inset 0 0 0 1px rgba(255,255,255,.28);opacity:1}
+a.fan:hover span{background:rgba(255,255,255,.24)}
+a.fan:active{transform:scale(.98)}
+a.fan:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.hub .apps.tiles{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.app.tile{flex-direction:column;align-items:flex-start;gap:12px;padding:16px 14px 14px;min-height:150px}
+.app.tile::after{display:none}
+.app.tile img{width:52px;height:52px;border-radius:15px}
+.app.tile .tx{flex:0 1 auto;width:100%}
+.app.tile b{white-space:normal;font-size:16px;line-height:1.25}
+.app.tile .bdg{margin-left:4px}
+.app.tile small{white-space:normal;font-size:13.5px;line-height:1.35}
+@media (min-width:640px){.hub .apps.tiles{grid-template-columns:repeat(auto-fill,minmax(190px,1fr))}}
+/* Site tabs: five tabs fit at 375px (the fade stays as the fallback) */
+@media (max-width:430px){.sitenav .wrap{gap:0}.sitenav a{padding:0 7px;font-size:14px}}
+@media (max-width:380px){.sitenav a{padding:0 5px;font-size:13.5px}}
+/* Sueldo: two-state choice as a segmented control; one-tap example */
+.segf{margin:0 0 16px}
+.segl{display:block;margin:0 0 6px;font-size:14px;font-weight:600;color:var(--ink)}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:16px;background:var(--field)}
+.seg label{position:relative;display:flex;align-items:center;justify-content:center;min-height:46px;margin:0;padding:8px 6px;border-radius:12px;font-size:14.5px;font-weight:700;line-height:1.2;text-align:center;color:var(--mut);cursor:pointer;transition:background .2s,color .2s}
+.seg input[type=radio]{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0;border:0;border-radius:12px;background:none;opacity:0;cursor:pointer}
+.seg label:has(input:checked){color:#fff;background:var(--fill,var(--accent));box-shadow:0 4px 12px -6px color-mix(in srgb,var(--accent) 80%,transparent)}
+.seg label:has(input:focus-visible){outline:3px solid color-mix(in srgb,var(--accent) 45%,transparent);outline-offset:2px}
+.exrow{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:-4px 0 16px}
+.exrow[hidden]{display:none}
+.exrow .hint{margin:0;flex:1 1 160px}
+/* Vaquita: the cow bounces when a split is calculated; the sample banner */
+@keyframes moo{0%{transform:rotate(6deg)}30%{transform:rotate(-5deg) translateY(-10px) scale(1.1)}60%{transform:rotate(10deg) translateY(1px) scale(.97)}80%{transform:rotate(4deg) translateY(-3px)}100%{transform:rotate(6deg)}}
+@media (prefers-reduced-motion:no-preference){.hero-art.moo{animation:moo .7s cubic-bezier(.3,1.4,.5,1)}}
+.demonote{display:flex;align-items:center;justify-content:space-between;gap:8px 14px;flex-wrap:wrap;margin:0 0 12px;padding:10px 14px;border-radius:12px;background:color-mix(in srgb,var(--accent) 12%,var(--card));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 30%,var(--line));font-size:14px;font-weight:600;color:var(--ink)}
+.demonote[hidden]{display:none}
+.if-empty .btn.small{margin-top:12px}
+/* Farmacia: two rows of frequent comunas, the rest behind "Ver todas" */
+.picksh{margin:14px 0 0;font-size:13px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--mut)}
+.empty .picks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;max-width:420px;margin:10px auto 0}
+.empty .pick{min-width:0;padding:0 6px;font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.allc{max-width:420px;margin:12px auto 0;text-align:left}
+.allc summary{display:flex;align-items:center;justify-content:center;min-height:44px;font-weight:700;font-size:15px;color:var(--accent-ink);cursor:pointer;list-style:none;border-radius:12px}
+.allc summary::-webkit-details-marker{display:none}
+.allc summary::after{content:"";width:8px;height:8px;margin:-3px 0 0 10px;border:solid currentColor;border-width:0 2.4px 2.4px 0;transform:rotate(45deg);transition:transform .2s}
+.allc[open] summary::after{transform:rotate(-135deg);margin-top:3px}
+.allc summary:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 45%,transparent);outline-offset:2px}
+.allg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2px 8px;max-height:260px;overflow-y:auto;padding:6px;border-radius:14px;background:var(--field)}
+.pickl{min-height:44px;padding:0 10px;border:0;border-radius:10px;background:transparent;font:inherit;font-size:15px;font-weight:600;color:var(--ink);text-align:left;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pickl:hover{background:color-mix(in srgb,var(--accent) 12%,var(--card))}
+.pickl:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 45%,transparent);outline-offset:-2px}
+/* Auto al Día: second example line, loud example chip, short source note */
+.live-n{grid-column:1/-1;margin-top:4px;padding-top:6px;border-top:1px solid rgba(255,255,255,.22);font-size:15px;font-weight:600}
+.live-n[hidden]{display:none}
+.tag.exb{padding:4px 12px;font-size:12.5px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#fff;background:var(--fill,var(--accent))}
+.demo{box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--accent) 45%,var(--line)),var(--shadow)}
+.local.src .ln{display:block}
+.local.src .ln+.ln{margin-top:4px}
+
+/* Round 6 */
+/* Source notes: the whole note is one block that fills the row (never a flex column beside the lock icon) */
+.local>span{flex:1 1 auto;min-width:0}
+.local.src .src-in{display:block}
+.local.src a{white-space:nowrap}
+/* Auto al Día: the hero's one action */
+.live-act{grid-column:1/-1;justify-self:start;min-height:44px;margin-top:10px;padding:0 18px;border:0;border-radius:12px;font:inherit;font-size:15px;font-weight:800;color:#0B1220;background:#fff;cursor:pointer;box-shadow:0 6px 16px -8px rgba(0,0,0,.6)}
+.live-act:hover{background:#E8EEF3}
+.live-act:active{transform:scale(.97)}
+.live-act:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.live-act[hidden]{display:none}
+/* Vaquita: the hero sentence (who pays whom) wraps; steps say plainly what is done; step 2 waits for step 1 */
+.live.verdict .live-v{white-space:normal;font-size:clamp(23px,6.6vw,30px);line-height:1.15;letter-spacing:-.02em;text-wrap:balance}
+h2.step .n{background:var(--card);color:var(--mut);box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--mut) 50%,transparent)}
+h2.step.done .n{background:var(--ok);color:#fff;box-shadow:0 0 0 4px color-mix(in srgb,var(--ok) 22%,transparent);font-size:0}
+fieldset.fs{margin:0;padding:0;border:0;min-width:0}
+fieldset.fs:disabled{opacity:.55}
+fieldset.fs:disabled .btn:disabled{opacity:1;box-shadow:none;background:var(--mut)}
+fieldset.fs:disabled :is(input,select,textarea){cursor:not-allowed}
+.hint.lock{margin:-4px 0 12px;padding:10px 14px;border-radius:12px;background:var(--field);color:var(--ink);font-size:14px}
+.hint.lock[hidden]{display:none}
+details.more{margin:22px 0 0;border-radius:var(--r);background:var(--card);box-shadow:var(--shadow)}
+.more>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:52px;padding:12px 18px;font-weight:700;font-size:15px;cursor:pointer;list-style:none;border-radius:var(--r)}
+.more>summary::-webkit-details-marker{display:none}
+.more>summary::after{content:"";flex:0 0 auto;width:8px;height:8px;margin:-3px 4px 0 0;border:solid var(--accent-ink);border-width:0 2.4px 2.4px 0;transform:rotate(45deg);transition:transform .2s}
+.more[open]>summary::after{transform:rotate(-135deg);margin-top:3px}
+.more>summary:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 45%,transparent);outline-offset:2px}
+.more[open]>summary{border-bottom:1px solid var(--line);border-bottom-left-radius:0;border-bottom-right-radius:0}
+.more>.below,.more>.others{padding:0 14px}
+.more>.below{margin-top:14px}
+.more .card.faq,.more .card.lead{box-shadow:none;padding-inline:4px}
+@media (min-width:1000px){main.wrap>.more{grid-column:1/-1}.more>.below,.more>.others{padding:0 22px}}
+@media (prefers-reduced-motion:reduce){.more>summary::after{transition:none}}
+/* Sueldo: the example sits right under the hero; the caveat is a caption, not a hint */
+.exrow.top{margin:0 0 14px;padding:12px 14px;border-radius:var(--r);background:var(--card);box-shadow:var(--shadow)}
+.exrow.top[hidden]{display:none}
+.exrow.top .hint{margin:0;flex:1 1 160px}
+[data-app=sueldo-liquido] .tabs{margin-top:0}
+.hint.cap{margin:12px 0 0;padding-top:10px;border-top:1px solid var(--line);font-size:12px;line-height:1.4}
+.hint.more-link{margin:0 0 12px;font-size:14px}
+@media (min-width:1000px){.exrow.top{max-width:calc(50% - 10px)}}
+/* Farmacia: name and hours together, address tight under them; the freshness pill sits over the results */
+.far{padding:16px}
+.far .fh{display:flex;align-items:flex-start;justify-content:space-between;gap:6px 10px;flex-wrap:wrap}
+.far h2{flex:1 1 150px;min-width:0;margin:0;font-size:18px;line-height:1.25}
+.hrs{display:inline-flex;align-items:center;gap:6px;flex:0 0 auto;max-width:100%;padding:4px 10px;border-radius:99px;font-size:12.5px;font-weight:700;line-height:1.3;color:var(--mut);background:var(--field);margin-top:1px}
+.hrs.on{color:var(--ok);background:color-mix(in srgb,var(--ok) 15%,var(--card))}
+.hrs.on::before{content:"";flex:0 0 auto;width:7px;height:7px;border-radius:50%;background:currentColor}
+.far .adr{margin:4px 0 0;color:var(--mut);font-size:15px;line-height:1.35}
+.far .actions{margin-top:12px}
+.resbar{margin:0 0 10px}
+.resbar:has(>[hidden]){display:none}
+[data-app=farmacia-de-turno] .empty{padding:2px 0 4px}
+.picksh{display:flex;align-items:center;justify-content:center;gap:8px;margin:2px 0 0}
+.picksh .ill{display:block;margin:0;filter:none;flex:0 0 auto}
+/* Hub: every card has the same anatomy. Tint, edge and badge come from the app's own color (--c); the badge slot is top right,
+   the chevron bottom right, on rows and tiles alike. */
+.app{padding-right:44px;background:color-mix(in srgb,var(--c) 11%,var(--card));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c) 32%,var(--line)),inset 0 3px 0 0 var(--c)}
+@media (prefers-color-scheme:dark){.app{background:color-mix(in srgb,var(--c) 24%,var(--card));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c) 45%,var(--line)),inset 0 3px 0 0 var(--c)}}
+.app.featured{background:linear-gradient(135deg,color-mix(in srgb,var(--c) 22%,var(--card)),color-mix(in srgb,var(--c) 9%,var(--card)));box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--c) 45%,var(--line)),inset 0 3px 0 0 var(--c),0 12px 24px -18px var(--c)}
+.app::after,.app.tile::after,.app.tile:last-child:nth-child(odd)::after{display:block;position:absolute;right:14px;bottom:14px;width:18px;height:18px;margin:0;background:var(--cf,var(--c))}
+.app.tile{padding-right:14px}
+.app.tile .tx{padding-right:22px}
+.app .bdg{position:absolute;top:12px;right:12px;margin:0;padding:3px 9px;vertical-align:baseline;font-size:11px;line-height:1.3;color:#fff;background:var(--cf,var(--c))}
+.app.featured b{padding-right:62px}
+.app.tile b{padding-right:0}
+a.fan span{color:#111827;background:#fff;box-shadow:0 6px 16px -8px rgba(0,0,0,.6);font-weight:800;opacity:1}
+a.fan:hover span{background:#E5E7EB}
+a.fan span i{font-style:normal}
+/* Round 7 */
+/* Vaquita: remove a person or an expense with a compact x (44px target, the name is in the aria-label) */
+.xbtn{flex:0 0 auto;display:inline-grid;place-items:center;width:44px;height:44px;margin:-4px -10px -4px 0;padding:0;border:0;border-radius:50%;background:none;color:var(--mut);cursor:pointer;transition:background .15s,color .15s}
+.xbtn svg{width:18px;height:18px;pointer-events:none}
+.xbtn:hover{background:var(--field);color:var(--bad)}
+.xbtn:active{transform:scale(.94)}
+.xbtn:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 45%,transparent);outline-offset:0}
+#people li{padding:6px 0}
+#result{scroll-margin-top:72px}
+/* Farmacia: compact result cards, actions on one row */
+.far{padding:14px 16px}
+.far .now{margin:0 0 4px;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ok)}
+.far.open{box-shadow:inset 4px 0 0 var(--ok),var(--shadow)}
+.far .actions{flex-wrap:nowrap;align-items:center;margin-top:10px;gap:8px}
+html[data-app] .side.wide>[aria-live] .far .actions .btn{flex:1 1 0;min-width:0;padding:8px 10px}
+html[data-app] .side.wide>[aria-live] .far .actions .btn:not(.ghost){flex:1.6 1 0}
+/* Hub: no dead band above the footer */
+.hub .hubfaq{margin-top:28px}
+.hubfoot{margin-top:16px}
+/* Sueldo: legend and footnotes one step darker (AA on the tinted card) */
+#sHead{margin:0 0 4px;font-size:18px;font-weight:700;color:var(--ink)}
+.sdesc{margin:0 0 12px;font-size:14.5px;font-weight:600;color:var(--mut-d,var(--mut))}
+[data-app=sueldo-liquido]{--mut-d:#444F60}
+@media (prefers-color-scheme:dark){[data-app=sueldo-liquido]{--mut-d:#B8C0CD}}
+[data-app=sueldo-liquido] .legend,[data-app=sueldo-liquido] .hint.cap,[data-app=sueldo-liquido] main.wrap>#dataNote{color:var(--mut-d)}
+
+/* Round 8 */
+/* Hub: no section leaves a hole. Phones and tablets (2 columns): an odd last tile spans the row, laid out as a row.
+   Wide: one column per app in the section (--n set by the build), so 3 cards fill the row too. */
+@media (min-width:640px) and (max-width:899px){.hub .apps.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:899px){
+  .hub .apps.tiles>.app.tile:last-child:nth-child(odd){grid-column:1/-1;flex-direction:row;align-items:center;gap:14px;min-height:92px}
+  .hub .apps.tiles>.app.tile:last-child:nth-child(odd) .tx{width:auto;flex:1;padding-right:30px}
+}
+@media (min-width:900px){.hub .apps.tiles{grid-template-columns:repeat(var(--n,3),minmax(0,1fr))}}
+/* Hub: the featured card is the one solid block of color, with a live worked example from the calculator. */
+.app.featured{color:#fff;background:linear-gradient(135deg,var(--cf),color-mix(in srgb,var(--cf) 76%,#000));box-shadow:0 16px 30px -16px var(--cf)}
+.app.featured :is(b,small){color:#fff}
+.app.featured small{opacity:.95;white-space:normal}
+.app.featured img{width:80px;height:80px;border-radius:23px;box-shadow:0 0 0 3px rgba(255,255,255,.92),0 10px 20px -8px rgba(0,0,0,.45)}
+.app.featured .bdg{color:var(--cf);background:#fff}
+.app.featured::after{background:#fff}
+.app.featured .ex{display:inline-block;margin-top:9px;padding:5px 12px;border-radius:99px;font-size:14px;font-weight:600;color:#fff;background:rgba(255,255,255,.18);box-shadow:inset 0 0 0 1px rgba(255,255,255,.4);white-space:nowrap}
+.app.featured .ex{font-size:13px;padding:5px 10px}
+#sOut,#result,#vehiculos>.card{scroll-margin-top:72px}
+.app.featured .ex b{display:inline;margin:0;padding:0;font-size:inherit;line-height:inherit;font-weight:800;white-space:nowrap}
+.app.featured:focus-visible{outline:3px solid var(--cf);outline-offset:3px}
+/* Vaquita: one-line bank details that open on focus (or when they hold text); payments strip above the transfers */
+#bank{height:52px;min-height:52px;resize:none;overflow:hidden;transition:height .18s ease}
+#bank::placeholder{font-size:15px}
+#bank:focus,#bank:not(:placeholder-shown){height:104px;overflow:auto}
+@media (prefers-reduced-motion:reduce){#bank{transition:none}}
+.pay{display:inline-block;margin:0 0 12px;padding:6px 14px;border-radius:99px;font-size:15px;font-weight:800;color:var(--accent-ink);background:color-mix(in srgb,var(--accent) 12%,var(--card));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 30%,var(--line))}
+.pay[hidden]{display:none}
+/* Farmacia: chips and "Ver todas" read as one block; no phone = the map is the main action, the note is quiet */
+.empty .picks{margin-bottom:0}
+.allc{margin-top:0}
+.allc summary{min-height:40px}
+.far p.nophone{margin:8px 0 0;font-size:13px;line-height:1.3;color:var(--mut)}
+/* Auto al Día: a Chilean plate (white face, bold black characters, thin black border, CHILE caption), CSS only */
+.plate,input.plate-in{border:1.5px solid #111;border-left-width:1.5px}
+input.plate-in{min-height:66px;padding:24px 10px 8px;font-size:23px;line-height:1.1;font-weight:800;letter-spacing:.12em;color:#000;border-radius:9px;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='46' height='10'%3E%3Ctext x='23' y='8.6' text-anchor='middle' font-family='Arial,Helvetica,sans-serif' font-weight='700' font-size='9' letter-spacing='1.8' fill='%23111'%3ECHILE%3C/text%3E%3C/svg%3E") no-repeat center 7px;box-shadow:inset 0 0 0 2px #fff,inset 0 0 0 3px #d4d4d8}
+input.plate-in::placeholder{color:#6B7280;font-size:17px;letter-spacing:.08em}
+input.plate-in:focus{background-color:#fff;border-color:#111;outline:3px solid var(--accent-ink);outline-offset:2px;box-shadow:inset 0 0 0 2px #fff,inset 0 0 0 3px #d4d4d8}
+.card.fresh{animation:fresh 1.4s ease-out 1}
+@keyframes fresh{0%{box-shadow:0 0 0 3px var(--accent)}100%{box-shadow:0 0 0 0 transparent}}
+@media (prefers-reduced-motion:reduce){.card.fresh{animation:none}}
+[data-app=auto-al-dia] .exrow{margin:6px 0 4px}
+
+/* Round 9 */
+/* Hub: titles hold two lines so every subtitle starts at the same height; the chevron owns the bottom-right corner and never meets the text. */
+.app.tile{min-height:0;padding-bottom:42px;justify-content:flex-start}
+.app.tile b{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;height:2.5em}
+.app.tile .tx{padding-right:0}
+.app.tile small{padding-right:26px}
+/* Sueldo: legend as a 2x2 grid */
+[data-app=sueldo-liquido] .legend{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 14px}
+/* Auto al Día: one main action per row, the calendar as a small icon button */
+.dl .actions{display:flex;align-items:center;gap:6px;margin-top:10px}
+.dl .actions .btn{flex:0 0 auto;min-height:40px;padding:8px 18px}
+.calbtn{flex:0 0 auto;display:inline-grid;place-items:center;width:44px;height:44px;margin:-4px 0;padding:0;border:0;border-radius:50%;background:none;color:var(--mut);cursor:pointer;transition:background .15s,color .15s}
+.calbtn:hover{background:var(--field);color:var(--accent-ink)}
+.calbtn:active{transform:scale(.94)}
+.calbtn:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 45%,transparent);outline-offset:0}
+/* Farmacia: clear button inside the comuna field; a refined focus ring */
+.fwrap{position:relative;margin-top:10px}
+#comuna{margin-top:0;padding-right:48px}
+#comuna:focus{outline:0;border-color:var(--accent-ink);box-shadow:0 0 0 1px var(--accent-ink)}
+.clr{position:absolute;top:50%;right:4px;transform:translateY(-50%);display:grid;place-items:center;width:44px;height:44px;padding:0;border:0;border-radius:50%;background:none;color:var(--mut);cursor:pointer}
+.clr[hidden]{display:none}
+.clr:hover{background:var(--field);color:var(--ink)}
+.clr:focus-visible{outline:2px solid var(--accent-ink);outline-offset:-2px}
+@media (prefers-reduced-motion:reduce){.calbtn{transition:none}}
+
+/* Round 10 */
+/* Clear secondary button (AA on the card in both themes) and a quiet text button for repeated rows */
+.btn.sec{color:var(--ghost-ink);background:var(--card);box-shadow:inset 0 0 0 2px var(--accent-ink)}
+.btn.sec:hover{filter:none;background:var(--tint)}
+.btn.txt{color:var(--accent-ink);background:none;box-shadow:none;font-weight:700;text-decoration:underline;text-decoration-thickness:1.5px;text-underline-offset:3px}
+.btn.txt:hover{filter:none;background:var(--tint)}
+.dl .actions .btn.txt{min-height:44px;padding:8px 12px;margin-left:-12px}
+/* Sueldo: the breakdown bar has rounded segments, fills in once when the result first appears, and names the liquido inline */
+[data-app=sueldo-liquido] .split{height:30px;gap:0;margin:14px 0 10px;border-radius:10px}
+/* Round 12: every segment is exactly its share of the bar (inline width %), no gap and no minimum; small ones are named in the legend */
+[data-app=sueldo-liquido] .split span{display:flex;align-items:center;flex:none;min-width:0;padding:0;overflow:hidden}
+[data-app=sueldo-liquido] .split em{padding:0 12px}
+.split em{font-style:normal;font-size:13px;font-weight:700;letter-spacing:-.005em;white-space:nowrap;color:#fff}
+@media (prefers-color-scheme:dark){.split em{color:#0B1220}}
+@keyframes splitin{from{clip-path:inset(0 100% 0 0 round 10px)}to{clip-path:inset(0 0 0 0 round 10px)}}
+.split.grow{animation:splitin .9s cubic-bezier(.2,.7,.2,1) both}
+/* Vaquita: with the example result first, step 1 is not preceded by the step rail */
+#result+.step-card::before{display:none}
+/* Farmacia: the FAQ and the "Te aviso" form below the results get one rhythm: tighter type, a round +/- chip, even gaps inside the form */
+[data-app=farmacia-de-turno] .below{margin-top:24px}
+[data-app=farmacia-de-turno] .faq{padding-bottom:8px}
+[data-app=farmacia-de-turno] .faq h2,[data-app=farmacia-de-turno] #lead h2{margin:0 0 6px;font-size:18px}
+[data-app=farmacia-de-turno] .faq summary{align-items:center;min-height:52px;padding:10px 0;font-size:16px;line-height:1.35}
+[data-app=farmacia-de-turno] .faq summary::after{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;font-size:18px;font-weight:700;background:var(--tint)}
+[data-app=farmacia-de-turno] .faq p{margin:0 0 16px;line-height:1.5}
+[data-app=farmacia-de-turno] #lead{padding-bottom:20px}
+[data-app=farmacia-de-turno] #lead .hint{margin:0 0 16px;font-size:14px;line-height:1.4}
+[data-app=farmacia-de-turno] #lead form>label:not(.check){display:block;margin-bottom:12px;font-size:15px;font-weight:600}
+[data-app=farmacia-de-turno] #lead label.check{margin:0 0 10px}
+[data-app=farmacia-de-turno] #lead .actions{margin-top:16px}
+/* Hub: the FAQ is a real accordion card, like the apps' */
+.hubfaq h2{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.hubfaq h2::before{content:"?"/"";display:inline-grid;place-items:center;flex:0 0 auto;width:28px;height:28px;border-radius:50%;font-size:15px;font-weight:800;color:var(--ghost-ink);background:var(--tint)}
+.hubfaq summary{align-items:center;min-height:52px;padding:10px 0;font-size:16px;color:var(--ink)}
+.hubfaq summary::after{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;font-size:18px;font-weight:700;background:var(--tint)}
+.hubfaq summary:hover{color:var(--ghost-ink)}
+.hubfaq p{margin:0 0 16px}
+.faq summary:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 45%,transparent);outline-offset:2px;border-radius:8px}
+
+/* Round 11: a hero scene of its own per app (inline SVG, decorative). It replaces the icon tile and the signature in the live panel. */
+.scene{display:block;width:100%;max-width:560px;height:auto;margin-top:14px;border-radius:18px;box-shadow:0 0 0 1px rgba(255,255,255,.18),0 14px 26px -18px rgba(0,0,0,.7)}
+.scene+.live{margin-top:10px}
+.hero:has(.scene) .hero-art,.hero:has(.scene) .live::after{display:none}
+.hero:has(.scene) .live{padding-right:16px}
+@media (prefers-reduced-motion:no-preference){
+  .vq-smoke{animation:sceneUp 4.2s ease-in infinite}.vq-c{animation:sceneBob 2.6s ease-in-out infinite}.vq-coins>g:nth-child(2) .vq-c{animation-delay:-.9s}.vq-coins>g:nth-child(3) .vq-c{animation-delay:-1.7s}
+  .vq-flow{animation:sceneDash 2.4s linear infinite}.vq-sp{animation:sceneTw 1.6s ease-in-out infinite}
+}
+@keyframes sceneUp{0%{transform:translateY(6px);opacity:0}30%{opacity:1}100%{transform:translateY(-10px);opacity:0}}
+@keyframes sceneBob{50%{transform:translate(var(--bx,0),-3px)}}
+@keyframes sceneDash{to{stroke-dashoffset:-12}}
+@keyframes sceneTw{50%{opacity:.2}}
+/* Auto al Día: the empty plate hint is a darker placeholder (AA on the white plate) and still reads as a hint: lighter weight, no caps */
+input.plate-in::placeholder{color:#4B5563;font-weight:600;opacity:1}
+@media (prefers-reduced-motion:no-preference){
+  .sc-b{animation:sceneBob 2.6s ease-in-out infinite}.sc-d1{animation-delay:-.9s}.sc-d2{animation-delay:-1.7s}
+  .sl-off{animation:sceneDrift 3.6s ease-in-out infinite}
+}
+@keyframes sceneDrift{50%{transform:translate(3px,2px)}}
+@media (prefers-reduced-motion:no-preference){.fm-tw{animation:sceneTw 2.4s ease-in-out infinite}.fm-t2{animation-delay:-1.1s}.fm-glow{animation:sceneGlow 3.2s ease-in-out infinite}}
+@keyframes sceneGlow{50%{opacity:.5}}
+@media (prefers-reduced-motion:no-preference){.ad-road{animation:sceneRoad .9s linear infinite}.ad-car{animation:sceneBounce 1.1s ease-in-out infinite}.ad-speed{animation:sceneTw 1.2s ease-in-out infinite}}
+@keyframes sceneRoad{to{stroke-dashoffset:-30}}
+@keyframes sceneBounce{50%{transform:translateY(-.8px)}}
+
+/* Hub: each tile ends with a one-line example of its own, led by a glyph from its hero scene, so tiles in the same row differ. */
+.app.tile .ex2{display:flex;align-items:center;gap:6px;margin-top:9px;padding:5px 8px;border-radius:10px;font-size:12px;line-height:1.25;font-weight:600;color:var(--ink);background:color-mix(in srgb,var(--c) 16%,var(--card));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c) 28%,transparent)}
+.app.tile .ex2 svg{flex:0 0 auto}
+.app.tile{padding-bottom:46px}
+
+/* Round 12 hub: tiles share row tracks (image / title / description / example) so a two-line title in one tile
+   moves its neighbour's description too, and a row with only one-line titles has no empty band. */
+.hub .apps.tiles{row-gap:0}
+.app.tile{display:grid;grid-row:span 4;grid-template-rows:subgrid;row-gap:0;align-items:start;margin-bottom:10px;padding-bottom:46px}
+.app.tile .tx{display:contents}
+.app.tile img{margin-bottom:12px}
+.app.tile b{display:block;height:auto;overflow:visible;-webkit-line-clamp:none;line-clamp:none;margin:0 0 4px}
+.app.tile small{padding-right:26px}
+.app.tile .ex2{align-self:stretch;margin-top:9px}
+.app.tile .bdg{grid-row:1}
+@media (max-width:899px){
+  .hub .apps.tiles>.app.tile:last-child:nth-child(odd){display:flex;grid-row:auto}
+  .hub .apps.tiles>.app.tile:last-child:nth-child(odd) .tx{display:block}
+  .hub .apps.tiles>.app.tile:last-child:nth-child(odd) img{margin-bottom:0}
+}
+
+/* Round 12 Auto al Día: every deadline row has the same rhythm (title, date line, then the action 10px below),
+   whether the button is the filled one or a text link, and extra row height never opens a gap in the middle. */
+[data-app=auto-al-dia] .dl{align-content:start}
+[data-app=auto-al-dia] .dl>.actions{margin-top:0;padding-top:10px}
+[data-app=auto-al-dia] .dl .actions .btn.small{min-height:44px;padding-block:8px;flex:0 0 auto}
+
+/* Round 13 Auto al Día: the quiet "Ya lo hice" is a tinted pill with the same 44px box as the filled one,
+   so the gap from the description to the action looks and measures the same on every row. */
+[data-app=auto-al-dia] .dl .actions .btn.small.txt{margin-left:0;padding-inline:18px;background:var(--tint);color:var(--accent-ink);text-decoration:none;border-radius:12px}
+[data-app=auto-al-dia] .dl .actions .btn.small.txt:hover{background:color-mix(in srgb,var(--accent) 16%,var(--card))}
+
+/* Round 13 Farmacia: two fixed slots on every card. No phone = a quiet, non-interactive chip in the call slot. */
+
+/* Round 13 Hub: five icons in a straight, slightly overlapping row, then the "+N apps" pill. */
+.fan img{width:48px;height:48px;border-radius:14px;margin-left:-10px}
+.fan img:nth-child(n){transform:none}
+.fan img:first-child{margin-left:0}
+.fan span{margin-left:12px}
+
+/* Joni r1 A: on wide screens the hero is two columns across the full width: title and example on the left, the scene on the right. Phone untouched. */
+@media (min-width:1000px){
+  .hero .wrap:has(>.scene){display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px 48px;align-items:center}
+  .hero .wrap:has(>.scene)>.hero-row{grid-column:1;grid-row:1;align-self:end}
+  .hero .wrap:has(>.scene)>.live{grid-column:1;grid-row:2;max-width:none}
+  .hero .wrap:has(>.scene)>.scene{grid-column:2;grid-row:1/span 2;margin:0;max-width:none;justify-self:end;width:100%}
+}
+/* Joni r1 C: the hub hero lists all the apps (no "+N" pill); five per row on a phone, one row on wide screens. */
+.fanx{position:relative;z-index:1;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px 4px;margin-top:16px;max-width:430px}
+.fanx a{display:flex;flex-direction:column;align-items:center;gap:5px;min-height:44px;color:#fff;text-decoration:none;font-size:11.5px;font-weight:600;line-height:1.2;text-align:center;border-radius:12px}
+.fanx a:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.fanx img{width:48px;height:48px;border-radius:14px;box-shadow:0 8px 16px -8px rgba(0,0,0,.7),0 0 0 2.5px #1F2937}
+@media (min-width:1000px){.fanx{grid-template-columns:repeat(10,minmax(0,1fr));max-width:none;gap:0 8px}}
+/* Joni r1 D: the source sits right next to the freshness chip */
+.resbar .src{margin-left:10px;font-size:12.5px;font-weight:600;color:var(--mut);text-decoration:underline;text-underline-offset:2px}
+
+/* Joni r2: hub footer links are 44px tall on a phone; the example in the Sueldo result column is labelled */
+@media (max-width:640px){.hubfoot p a{display:inline-flex;align-items:center;min-height:44px}}
+.out.ejemplo .tag{margin-right:6px}
+
+/* Joni r3 */
+/* Hub: the rates line under the Sueldo card, trust answers open, a readable footer with 44px links at every width */
+.tasas{margin:12px 4px 0;font-size:14px;line-height:1.45;color:var(--ink)}
+.tasas a{font-weight:600}
+.hubfaq{scroll-margin-top:72px}
+.hubfoot{font-size:14px;line-height:1.5;color:color-mix(in srgb,var(--ink) 84%,var(--card))}
+.hubfoot a{display:inline-flex;align-items:center;min-height:44px}
+.hubfoot .fx{line-height:1.4}
+.hubfoot .fpts li{font-size:14px}
+/* Sueldo: phones drop the illustration so the first input is on the first screen; desktop hero is shorter so the result panel opens higher */
+@media (max-width:699px){[data-app=sueldo-liquido] .hero .scene{display:none}}
+@media (min-width:1000px){
+  [data-app=sueldo-liquido] .hero{padding-top:22px;padding-bottom:22px}
+  [data-app=sueldo-liquido] .hero:has(.live) h1{font-size:36px}
+  [data-app=sueldo-liquido] .hero .wrap:has(>.scene){gap:14px 48px}
+  [data-app=sueldo-liquido] .live{margin-top:0;padding:10px 16px 11px}
+  [data-app=sueldo-liquido] .live-v{font-size:34px}
+}
+/* Vaquita: the privacy promise is a chip under the hero, not only a footnote */
+.privchip{display:flex;width:fit-content;align-items:center;gap:8px;margin:0 0 14px;padding:8px 14px 8px 12px;border-radius:99px;background:var(--card);box-shadow:var(--shadow);font-size:14px;font-weight:700;color:var(--ink)}
+.privchip svg{flex:0 0 auto;color:var(--ok)}
+main.wrap>.privchip:first-child{margin-top:44px}
+@media (min-width:1000px){main.wrap>.privchip:first-child{margin-top:52px}}
+/* Farmacia and Vaquita: phones drop the illustration (before and after a choice) so the first field is on the first screen */
+@media (max-width:699px){html[data-app=farmacia-de-turno] .hero .scene,html[data-app=vaquita] .hero .scene{display:none}}
+
+/* Joni r4 */
+/* Hub: the two claims under the Sueldo card are two links, each to its own answer */
+.hubfaq details{scroll-margin-top:72px}
+/* Sueldo, Finiquito tab (wide): the link row and the form sit in the left column; the result panel spans both rows, so no row is stretched into a hole */
+@media (min-width:1000px){
+  main.wrap>section:not(.card,.others):has(>.more-link){grid-template-rows:auto 1fr}
+  main.wrap>section:not(.card,.others):has(>.more-link)>.out,
+  main.wrap>section:not(.card,.others):not(:has(>.out:not([hidden]))):has(>.more-link)::after{grid-row:1/span 2}
+  main.wrap>section:not(.card,.others)>.more-link{align-self:start}
+}
+/* Sueldo (phone): while the form is empty the hero example is one compact line, not a card with a second big number */
+.live-ln{display:none}
+@media (max-width:699px){
+  [data-app=sueldo-liquido] .live.ex{display:block;padding:9px 14px 9px;margin-top:12px}
+  [data-app=sueldo-liquido] .live.ex>:is(.live-k,.live-v,.live-s){display:none}
+  [data-app=sueldo-liquido] .live.ex .live-ln{display:inline;font-size:15px;line-height:1.4;font-weight:600}
+}
+
+/* Joni r5 B: the Sueldo input card keeps its own height next to the taller result panel (no blank band under "Más opciones") */
+@media (min-width:1000px){[data-app=sueldo-liquido] main.wrap>section>form.card{align-self:start}}
+#fOut{scroll-margin-top:72px}
+
+/* Joni r5 D/E (Vaquita): the "Ver un ejemplo" chip is a compact line under the name field; the hero trims its dead band; step 2 collapses to one line until two people exist */
+[data-app=vaquita] .hero{padding-bottom:26px}
+@media (min-width:1000px){[data-app=vaquita] .hero{padding-bottom:34px}}
+.if-empty.fun:has(>#demoBtn){flex-direction:row;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px 12px;padding:12px 14px;font-size:14px}
+.if-empty.fun>#demoBtn{margin:0;min-height:44px;border-radius:99px}
+.step-card.lockd #fExp,.step-card.lockd #expenses,.step-card.lockd .if-empty{display:none}
+.step-card.lockd .hint.lock{margin:0}
+@media (min-width:1000px){.side.pair>.card.lockd{flex:0 0 auto}}
+/* Joni r5 A (Sueldo, phone): the source line under the form rides 14px higher, so its Previred link clears the consent strip on the first screen */
+@media (max-width:699px){[data-app=sueldo-liquido] :is(#fS,#fF){margin-bottom:0}[data-app=sueldo-liquido] :is(#sOut,#fOut){margin-top:14px}[data-app=sueldo-liquido] #dataNote{margin-top:6px}}
+
+/* Joni r6 */
+/* Footer links: one wrap row, 12px between items, 44px tap height, no separator glyph that could start or end a line */
+.flinks{display:flex;flex-wrap:wrap;gap:0 12px;margin:0 0 6px}
+.flinks a{display:inline-flex;align-items:center;min-height:44px}
+/* Sueldo: the tab row spans both columns, so no blank band sits beside it; the example button sits above its own form */
+[data-app=sueldo-liquido] .tabs{max-width:none}
+[data-app=sueldo-liquido] .exrow{margin:0 0 14px}
+[data-app=sueldo-liquido] .exrow .hint{flex:0 1 auto;font-size:14px;color:var(--mut-d)}
+/* Vaquita (wide): each card keeps its own height, no white band under the names */
+@media (min-width:1000px){
+  [data-app=vaquita] main.wrap:has(>.side.pair)>.card:not(.span){align-self:start}
+  [data-app=vaquita] main.wrap>.side.pair{align-self:start}
+  [data-app=vaquita] main.wrap>.side.pair>.card{flex:0 0 auto}
+}
+/* Sueldo (phone): the example row costs no extra height, so the source line under the form still clears the consent strip */
+@media (max-width:699px){
+  [data-app=sueldo-liquido] .hero{padding-bottom:12px}
+  [data-app=sueldo-liquido] main.wrap{margin-top:10px}
+  [data-app=sueldo-liquido] .tabs{margin-bottom:8px}
+  [data-app=sueldo-liquido] .exrow{margin:-6px 0 0}
+}
+
+/* Joni r7: footer links keep a 40px+ hit area but a tight rhythm. Hub site links are one wrap row; the contact row is a 2-column grid on phones and one row on desktop. */
+.hubfoot .fx{display:flex;flex-wrap:wrap;gap:6px 20px;margin:6px 0 14px}
+.hubfoot .fx a{position:relative;min-height:0;padding:6px 0}
+.hubfoot .fx a::before{content:"";position:absolute;inset:-5px 0}
+.flinks{display:grid;grid-template-columns:1fr 1fr;gap:0 16px;margin:0 0 6px}
+.flinks a{min-height:0;padding:10px 0}
+.flinks a:last-child:nth-child(odd){grid-column:1/-1}
+@media (min-width:640px){.flinks{display:flex;flex-wrap:wrap;gap:0 20px}}
+/* Joni r8: three short links fit on one line at any phone width, so a 3-link row is one wrap row (no lone link under a 2-column grid) */
+.flinks:has(> a:nth-child(3):last-child){display:flex;flex-wrap:wrap;gap:0 20px}
+/* Joni r7: the Sueldo data note spans the content column (both tabs share it), 14px, normal line height */
+[data-app=sueldo-liquido] main.wrap>#dataNote{grid-column:1/-1;max-width:none;font-size:14px;line-height:normal}

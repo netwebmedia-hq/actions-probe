@@ -1,0 +1,93 @@
+name: tasacion capacitor ios
+
+# The Tasación tool inside a real Capacitor iOS shell (WKWebView, capacitor://localhost) in the iOS Simulator,
+# driven through idb. Bundle = tasacion-capacitor/www (copy of the App Store app's web dir).
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  cap:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Create the Capacitor iOS project
+        working-directory: tasacion-capacitor
+        run: |
+          cat > package.json <<'EOF'
+          { "name": "tasacion-capacitor", "version": "1.0.0", "private": true }
+          EOF
+          npm install --no-audit --no-fund @capacitor/core@^8.5.2 @capacitor/ios@^8.5.2 @capacitor/cli@^8.5.2 @capacitor/share @capacitor/filesystem
+          cat > capacitor.config.json <<'EOF'
+          { "appId": "com.example.tasacioncap", "appName": "Apps Chile", "webDir": "www",
+            "plugins": { "CapacitorHttp": { "enabled": true } },
+            "ios": { "contentInset": "never", "backgroundColor": "#F2F4F8" } }
+          EOF
+          npx cap add ios
+          npx cap sync ios
+
+      - name: Pick and boot a simulator
+        run: |
+          xcodebuild -version | tee versions.txt
+          UDID=$(xcrun simctl list devices available -j | python3 -c "
+          import json,sys
+          d=json.load(sys.stdin)['devices']
+          c=[(k,x) for k,v in d.items() if 'iOS' in k for x in v if x['name'].startswith('iPhone') and 'Max' not in x['name'] and 'SE' not in x['name']]
+          c.sort(key=lambda t:(t[0],t[1]['name']))
+          k,x=c[-1]; print(x['udid']); print(k,x['name'],file=sys.stderr)" 2>>versions.txt)
+          echo "UDID=$UDID" >> "$GITHUB_ENV"
+          xcrun simctl boot "$UDID"
+          xcrun simctl bootstatus "$UDID" -b
+          xcrun simctl status_bar "$UDID" override --time "9:41" --batteryState charged --batteryLevel 100 || true
+
+      - name: Install idb
+        run: |
+          brew tap facebook/fb
+          brew trust facebook/fb || true
+          brew install idb-companion
+          python3 -m venv venv
+          venv/bin/pip install --quiet fb-idb pillow
+          echo "$PWD/venv/bin" >> "$GITHUB_PATH"
+
+      - name: Build for the simulator
+        working-directory: tasacion-capacitor
+        run: |
+          if [ -d ios/App/App.xcworkspace ]; then T="-workspace ios/App/App.xcworkspace"; else T="-project ios/App/App.xcodeproj"; fi
+          xcodebuild $T -scheme App -configuration Release -sdk iphonesimulator -destination "id=$UDID" \
+            -derivedDataPath dd CODE_SIGNING_ALLOWED=NO build | tail -5
+          APP=dd/Build/Products/Release-iphonesimulator/App.app
+          ls $APP | head -20
+          ls $APP/public | head
+          /usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" $APP/Info.plist | tee bundle-id.txt
+          xcrun simctl install "$UDID" $APP
+
+      - name: Drive the app
+        run: python3 tasacion-capacitor/drive.py "$UDID" "$(cat tasacion-capacitor/bundle-id.txt)"
+
+      - name: Network back on
+        if: always()
+        run: sudo pfctl -d || true
+
+      - name: App log evidence
+        if: always()
+        run: |
+          mkdir -p out-cap
+          cp versions.txt out-cap/ || true
+          xcrun simctl spawn "$UDID" log show --last 20m --style compact --info --debug \
+            --predicate 'process == "App" OR subsystem CONTAINS "capacitor" OR eventMessage CONTAINS "api/public/uf"' 2>/dev/null \
+            | grep -iE "uf|cors|fetch|http|error|capacitor|denied|blocked" | head -150 > out-cap/applog.txt || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tasacion-capacitor
+          path: out-cap
+          retention-days: 5

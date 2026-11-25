@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="es-CL" data-app="boleta-honorarios">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://netwebmedia.com https://dongaston.com; form-action 'none'">
+  <title>Boleta de honorarios: calcula bruto, líquido y retención</title>
+  <meta name="description" content="Calcula la retención de la boleta de honorarios: pasa del bruto al líquido y al revés. Registra tus boletas del año y descárgalas en CSV.">
+  <link rel="canonical" href="https://boleta-honorarios.fracmo.ai/">
+  <meta name="robots" content="index, follow">
+  <meta property="og:site_name" content="Boleta Fácil">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="es_CL">
+  <meta property="og:title" content="Boleta Fácil: Boletas de honorarios: bruto, líquido y tu registro del año">
+  <meta property="og:description" content="Convierte el monto bruto de una boleta de honorarios en líquido y al revés con la retención del año. Anota tus boletas en este dispositivo, ve totales por mes y descarga el año en CSV.">
+  <meta property="og:url" content="https://boleta-honorarios.fracmo.ai/">
+  <meta property="og:image" content="https://boleta-honorarios.fracmo.ai/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:image" content="https://boleta-honorarios.fracmo.ai/og.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="color-scheme" content="light dark">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Boleta Fácil">
+  <link rel="apple-touch-icon" href="icon-180.png?v=71dcf787">
+  <meta name="theme-color" content="#E0590B">
+  <link rel="icon" href="icon.svg?v=71dcf787" type="image/svg+xml">
+  <link rel="stylesheet" href="../shell.css?v=c5e53731">
+  <style>:root{--accent:#E0590B;--fill:#C54E0A;--ink-on-bg:#B84909}</style>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"WebApplication","name":"Boleta Fácil","url":"https://boleta-honorarios.fracmo.ai/","applicationCategory":"FinanceApplication","operatingSystem":"Web","inLanguage":"es-CL","isAccessibleForFree":true,"description":"Convierte el monto bruto de una boleta de honorarios en líquido y al revés con la retención del año. Anota tus boletas en este dispositivo, ve totales por mes y descarga el año en CSV.","publisher":{"@type":"Organization","name":"Don Gastón SpA","url":"https://dongaston.com/"}}
+  </script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"¿Cuánto es la retención de la boleta de honorarios en 2026?","acceptedAnswer":{"@type":"Answer","text":"En 2026 la retención es 15,25%. Sube a 16% en 2027 y a 17% en 2028, según la Ley 21.133."}},{"@type":"Question","name":"¿Cómo calculo el bruto y el líquido de una boleta de honorarios?","acceptedAnswer":{"@type":"Answer","text":"Pones el monto que conoces y la herramienta calcula el otro con la retención del año. Sirve para sacar el líquido desde el bruto o el bruto desde el líquido. El resultado es referencial."}},{"@type":"Question","name":"¿Para qué sirve la retención de honorarios?","acceptedAnswer":{"@type":"Answer","text":"La retención paga primero tus cotizaciones previsionales en la Operación Renta. Esas cotizaciones se calculan sobre el 80% del bruto anual."}},{"@type":"Question","name":"¿Puedo llevar un registro de mis boletas y exportarlo?","acceptedAnswer":{"@type":"Answer","text":"Sí. La herramienta guarda un registro de boletas por año y lo exporta en CSV. Los datos quedan solo en tu dispositivo, sin registro."}}]}
+  </script>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="./index.html"><img src="icon.svg?v=71dcf787" alt="" width="34" height="34"><span>Boleta Fácil</span></a>
+    <nav class="nav"><button class="more" id="share" type="button" aria-label="Compartir" title="Compartir"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 15V4M8 8l4-4 4 4"/><path d="M5 12v6a2 2 0 002 2h10a2 2 0 002-2v-6"/></svg><span>Compartir</span></button><a class="more" href="../index.html" aria-label="Más apps" title="Más apps"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="4" y="4" width="6.5" height="6.5" rx="1.7"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.7"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.7"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.7"/></svg><span>Más apps</span></a></nav>
+  </div>
+</header>
+<div class="hero"><div class="wrap"><div class="hero-row"><h1>Boletas de honorarios: bruto, líquido y tu registro del año</h1><img class="hero-art" src="icon.svg?v=71dcf787" alt="" width="168" height="168"></div><div class="live" role="status" data-idle="$0"><span class="live-k">Recibes</span><span class="live-v"></span><span class="live-s"></span></div></div></div>
+<main class="wrap">
+  <form id="fCalc" class="card">
+    <h2>Calculadora</h2>
+    <div class="row">
+      <label class="full">Quiero calcular
+        <select id="cMode">
+          <option value="bruto">De bruto a líquido</option>
+          <option value="liquido">De líquido a bruto</option>
+        </select>
+      </label>
+      <label class="full"><span id="cLabel">Monto bruto</span><input id="cAmount" inputmode="numeric" autocomplete="off" placeholder="$"></label>
+      <label>Año de la boleta<select id="cYear"></select></label>
+    </div>
+    <p class="hint">Si tu cliente es una empresa, ella retiene este porcentaje; si no retiene (por ejemplo, una persona natural), tú lo pagas igual como PPM.</p>
+    <div id="cOut" hidden>
+      <div class="scroll"><table class="t"><tbody id="cTable"></tbody></table></div>
+    </div>
+    <p class="if-empty">Escribe un monto y aquí aparece cuánto te retienen y cuánto recibes.</p>
+  </form>
+
+  <div class="side pair" data-empty="">
+  <section class="card">
+    <h2>Mi registro</h2>
+    <p class="hint">Se guarda solo en este dispositivo. Si borras los datos del navegador, se pierde: descarga el CSV de vez en cuando.</p>
+    <form id="fBoleta">
+      <div class="row">
+        <label>Fecha<input id="rFecha" type="date" required></label>
+        <label>Cliente<input id="rCliente" autocomplete="off" maxlength="60" required></label>
+        <label>Monto bruto<input id="rMonto" inputmode="numeric" autocomplete="off" placeholder="$" required></label>
+      </div>
+      <div class="actions"><button class="btn" type="submit">Agregar boleta</button></div>
+      <p id="rMsg" class="bad" role="alert"></p>
+    </form>
+    <h3 style="margin-top:18px">Boletas del año</h3>
+    <ul id="bList" class="list"></ul>
+    <p class="if-empty" id="bVacio">Aquí aparecen las boletas que anotes.</p>
+  </section>
+  </div>
+
+  <section class="card out span" id="yCard" hidden>
+    <h2>Año <select id="yYear" aria-label="Año del resumen" style="display:inline-block;width:auto"></select></h2>
+    <div class="scroll"><table class="t hide2">
+      <thead><tr><th>Mes</th><th class="n">Boletas</th><th class="n">Bruto</th><th class="n">Retención</th><th class="n">Líquido</th></tr></thead>
+      <tbody id="yMonths"></tbody>
+      <tfoot id="yTotal"></tfoot>
+    </table></div>
+    <p class="hint" id="yRef"></p>
+    <div class="actions"><button class="btn ghost" id="yCsv" type="button">Descargar CSV del año</button></div>
+  </section>
+
+  <section class="card span" id="rentaCard" hidden>
+    <h2>Operación Renta</h2>
+    <p>Base anual para tus cotizaciones (estimada): <b id="nRenta"></b> <span class="mut" id="nTope"></span></p>
+    <p>Retención acumulada del año: <b id="nRet"></b></p>
+    <p class="hint">La retención de la boleta se usa primero para pagar tus cotizaciones previsionales; recién después se compara con el impuesto que te toca. Por eso no se puede calcular una devolución solo con estos datos.</p>
+  </section>
+
+  <p class="hint" id="dataNote"></p>
+
+  <div class="below">
+  <section class="card faq noprint">
+    <h2>Preguntas frecuentes</h2>
+    <details><summary>¿Cuánto es la retención de la boleta de honorarios en 2026?</summary><p>En 2026 la retención es 15,25%. Sube a 16% en 2027 y a 17% en 2028, según la Ley 21.133.</p></details>
+    <details><summary>¿Cómo calculo el bruto y el líquido de una boleta de honorarios?</summary><p>Pones el monto que conoces y la herramienta calcula el otro con la retención del año. Sirve para sacar el líquido desde el bruto o el bruto desde el líquido. El resultado es referencial.</p></details>
+    <details><summary>¿Para qué sirve la retención de honorarios?</summary><p>La retención paga primero tus cotizaciones previsionales en la Operación Renta. Esas cotizaciones se calculan sobre el 80% del bruto anual.</p></details>
+    <details><summary>¿Puedo llevar un registro de mis boletas y exportarlo?</summary><p>Sí. La herramienta guarda un registro de boletas por año y lo exporta en CSV. Los datos quedan solo en tu dispositivo, sin registro.</p></details>
+  </section>
+  </div>
+  <section class="others noprint">
+    <h2>Más apps gratis</h2>
+    <div class="strip">
+      <a href="../auto-al-dia/index.html"><img src="../auto-al-dia/icon.svg?v=9d2658c4" alt="" width="44" height="44" loading="lazy">Auto al Día</a>
+      <a href="../cotizador/index.html"><img src="../cotizador/icon.svg?v=65e77e67" alt="" width="44" height="44" loading="lazy">Cotiza Fácil</a>
+      <a href="../farmacia-de-turno/index.html"><img src="../farmacia-de-turno/icon.svg?v=c72461da" alt="" width="44" height="44" loading="lazy">Farmacia de Turno</a>
+      <a href="../gastos-comunes/index.html"><img src="../gastos-comunes/icon.svg?v=85e6d767" alt="" width="44" height="44" loading="lazy">Gastos Comunes</a>
+      <a href="../libreta-fiados/index.html"><img src="../libreta-fiados/icon.svg?v=95e91e36" alt="" width="44" height="44" loading="lazy">Libreta de Fiados</a>
+      <a href="../pension-alimentos/index.html"><img src="../pension-alimentos/icon.svg?v=7b6941d0" alt="" width="44" height="44" loading="lazy">Pensión de Alimentos</a>
+      <a href="../reajuste-arriendo/index.html"><img src="../reajuste-arriendo/icon.svg?v=c84f5634" alt="" width="44" height="44" loading="lazy">Reajuste Arriendo</a>
+      <a href="../sueldo-liquido/index.html"><img src="../sueldo-liquido/icon.svg?v=0adc694d" alt="" width="44" height="44" loading="lazy">Sueldo Líquido</a>
+      <a href="../tasacion/index.html"><img src="../tasacion/icon.svg?v=45100cb4" alt="" width="44" height="44" loading="lazy">Tasación</a>
+      <a href="../vaquita/index.html"><img src="../vaquita/icon.svg?v=41f14c45" alt="" width="44" height="44" loading="lazy">Vaquita</a>
+    </div>
+  </section>
+  <p class="local"><span>Lo que escribes se guarda solo en este teléfono. La app consulta los valores del mes en nuestros servidores; no envía lo que escribes. <button class="lnk noprint" type="button" id="bkOut">Guardar respaldo</button> · <button class="lnk noprint" type="button" id="bkIn">Restaurar respaldo</button><input type="file" id="bkFile" accept="application/json,.json" hidden> <span id="bkMsg" class="bad" role="alert"></span></span></p>
+</main>
+<footer class="foot">
+  <div class="wrap">
+    <p>Boleta Fácil es un servicio de Don Gastón SpA, RUT 78.493.794-1. Herramienta informativa y gratuita: los resultados son referenciales y no reemplazan asesoría profesional.</p>
+    <nav class="flinks" aria-label="Enlaces del sitio"><a href="mailto:carlos@netwebmedia.com">carlos@netwebmedia.com</a><a href="https://dongaston.com/privacidad.html">Privacidad</a><a href="https://www.youtube.com/@appsparachile" rel="me noopener" target="_blank">YouTube</a></nav>
+    <p class="dg-credit">A <a href="https://dongaston.com/">Don Gastón</a> company</p>
+  </div>
+</footer>
+<script src="../shell.js?v=c5e53731" defer></script>
+<script src="data.js?v=71dcf787" defer></script>
+<script src="logic.js?v=71dcf787" defer></script>
+<script src="ui.js?v=71dcf787" defer></script>
+</body>
+</html>
