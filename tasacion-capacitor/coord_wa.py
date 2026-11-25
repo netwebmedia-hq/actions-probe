@@ -70,22 +70,24 @@ def bash_out(args):
     return (r.stdout or b'').decode('utf8', 'replace') + (r.stderr or b'').decode('utf8', 'replace')
 
 
+def front_label():
+    r = sh(['idb', 'ui', 'describe-all', '--udid', UDID], timeout=30)
+    t = (r.stdout or b'').decode('utf8', 'replace')
+    import re as _re
+    return _re.findall(r'"AXLabel":\s*"([^"]*)"', t)[:3]
+
+
 def scen():
-    sh(['xcrun', 'simctl', 'pbcopy', UDID], input=b'EMPTY-BEFORE-TEST')
     launch(30); open_tool(); time.sleep(12); shot('1-ready')
-    tap(148, 456, 4); shot('2-after-wa-4s')
-    time.sleep(4); shot('2b-after-wa-8s')
-    print('simctl launch (bring back):', bash_out(['xcrun', 'simctl', 'launch', UDID, BUNDLE]), flush=True)
-    time.sleep(5); shot('3-back-after-launch')
-    swipe(2, 456, 300, 456, '0.3'); time.sleep(2); shot('3b-after-edge-swipe-back')
-    time.sleep(6); shot('3c-settled')
-    tap(328, 456, 0.3); shot('4-copiar-immediate')
-    time.sleep(1.5); shot('4b-copiar-1.5s')
-    pb = bash_out(['xcrun', 'simctl', 'pbpaste', UDID])
-    open(os.path.join(OUT, 'pbpaste.txt'), 'w', encoding='utf8').write(pb)
-    print('PBPASTE>>>', pb, '<<<', flush=True)
-    tap(334, 96, 5); shot('5-share-tapped')
-    tap(210, 60, 3); shot('5b-after-dismiss-tap')
+    print('front before tap', front_label(), flush=True)
+    tap(148, 456, 0.2)
+    t0 = time.time()
+    for k in (1, 2, 3, 5, 8, 12, 20):
+        time.sleep(max(0, k - (time.time() - t0)))
+        shot('2-after-wa-%ds' % k)
+        print('t+%ds front' % k, front_label(), flush=True)
+    print('simctl launch:', bash_out(['xcrun', 'simctl', 'launch', UDID, BUNDLE]), flush=True)
+    time.sleep(5); shot('3-back-after-launch'); print('front after launch', front_label(), flush=True)
 
 
 try:

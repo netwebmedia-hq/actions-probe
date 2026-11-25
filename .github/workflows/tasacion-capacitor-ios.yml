@@ -82,8 +82,8 @@ jobs:
           mkdir -p out-cap
           cp versions.txt out-cap/ || true
           xcrun simctl spawn "$UDID" log show --last 20m --style compact --info --debug \
-            --predicate 'process == "App" OR subsystem CONTAINS "capacitor" OR eventMessage CONTAINS "api/public/uf"' 2>/dev/null \
-            | grep -iE "uf|cors|fetch|http|error|capacitor|denied|blocked" | head -150 > out-cap/applog.txt || true
+            --predicate 'process == "App" OR process == "MobileSafari" OR eventMessage CONTAINS "wa.me" OR eventMessage CONTAINS "whatsapp"' 2>/dev/null \
+            | grep -iE "wa\.me|safari|openurl|launchservices|universal|whatsapp|cors|capacitor|denied|blocked" | head -150 > out-cap/applog.txt || true
 
       - uses: actions/upload-artifact@v4
         if: always()
