@@ -29,7 +29,7 @@
   Object.keys(L.AMENITIES).forEach(function (k) {
     var lab = document.createElement('label'); lab.className = 'check';
     var box = document.createElement('input'); box.type = 'checkbox'; box.value = k;
-    var sp = document.createElement('span'); sp.textContent = L.AMENITIES[k].es;
+    var sp = document.createElement('span'); sp.textContent = L.AMENITIES[k].es.replace('/', '/\u200b'); // lets "Condominio/seguridad" wrap in its column
     lab.appendChild(box); lab.appendChild(sp); $('#tExtras').appendChild(lab);
   });
 
@@ -71,11 +71,12 @@
 
   function leer() {
     var t = tipo(), depto = t === 'departamento', ofi = t === 'oficina', land = t === 'terreno';
-    var n = function (id) { return Math.max(0, S.num($(id).value)); };
+    // A slip of the finger must not price a 250.000.000 m2 lot: built up to 20.000 m2, land up to 100 hectares.
+    var n = function (id, max) { return Math.min(max, Math.max(0, S.num($(id).value))); };
     return {
       tipo: t, comuna: $('#tComuna').value, sector: $('#tSectorL').hidden ? '' : $('#tSector').value,
-      builtM2: land ? 0 : n('#tBuilt'), lotM2: (depto || ofi) ? 0 : n('#tLot'),
-      terrazaM2: depto ? n('#tTerr') : 0, bodegas: (depto || ofi) ? +$('#tBod').value || 0 : 0,
+      builtM2: land ? 0 : n('#tBuilt', 20000), lotM2: (depto || ofi) ? 0 : n('#tLot', 1000000),
+      terrazaM2: depto ? n('#tTerr', 2000) : 0, bodegas: (depto || ofi) ? +$('#tBod').value || 0 : 0,
       beds: (ofi || land) ? 0 : +$('#tBeds').value || 0, baths: (ofi || land) ? 0 : +$('#tBaths').value || 0,
       parking: land ? 0 : +$('#tPark').value || 0, condition: $('#tEstado').value,
       amenities: land ? [] : S.$$('#tExtras label:not([hidden]) input:checked').map(function (b) { return b.value; })
@@ -110,11 +111,15 @@
     $('#tRango').textContent = 'Rango estimado: UF ' + uf0(r.ufLow) + ' a UF ' + uf0(r.ufHigh) + '.';
     $('#tConf').textContent = conf[0]; $('#tConf').className = 'tag' + (conf[1] ? ' ' + conf[1] : '');
     $('#tM2').textContent = S.dec(r.perM2) + ' UF por m²';
+    // The engine writes "1 estacionamiento(s)": say it the way a person would.
+    var plural = function (t) { return /^1\s/.test(t) ? t.replace('(s)', '') : t.replace('(s)', 's'); };
     $('#tTabla').innerHTML = r.breakdown.map(function (b) {
-      return '<tr><td>' + S.esc(b.es) + '<br><span class="mut">' + S.esc(String(b.detail).replace(/(\d)\.(\d)/g, '$1,$2')) + '</span></td><td class="n">' +
+      return '<tr><td>' + S.esc(plural(String(b.es))) + '<br><span class="mut">' + S.esc(String(b.detail).replace(/(\d)\.(\d)/g, '$1,$2')) + '</span></td><td class="n">' +
         (b.uf < 0 ? '-' : '') + 'UF ' + uf0(Math.abs(b.uf)) + '</td></tr>';
-    }).join('');
-    $('#tFuente').textContent = 'Valor base de ' + r.location + ': ' + (r.source || 'modelo nacional') + '. UF ' + ufOrigen + ' de ' +
+    }).join('') +
+      // The shell prints the last row of a table as its total.
+      '<tr><td>Valor de mercado estimado<br><span class="mut">Suma redondeada</span></td><td class="n">UF ' + uf0(r.ufMid) + '</td></tr>';
+    $('#tFuente').textContent = 'Valor base de ' + r.location + ': ' + String(r.source || 'modelo nacional').replace('listings', 'avisos') + '. UF ' + ufOrigen + ' de ' +
       S.clp(r.ufClp) + ' (' + cuando(r.ufClpAsOf) + ').' + (ufOrigen === 'de hoy' || !base ? '' : ' ' + S.viejo(base.asOf));
     $('#tWa').href = S.wa(texto(inp, r));
     S.live('UF ' + uf0(r.ufMid), S.clp(r.clpMid) + ' · ' + TIPO[inp.tipo] + ' en ' + r.location);

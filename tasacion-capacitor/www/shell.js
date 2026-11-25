@@ -267,6 +267,24 @@
     btn.addEventListener('click', function () { if (prompt) { prompt.prompt(); prompt = null; btn.hidden = true; } });
     window.addEventListener('appinstalled', function () { btn.hidden = true; });
   }
+  // iOS app: with the keyboard up the web view moves its content and the bar's safe-area padding ends up
+  // under the status bar. Keep the largest top inset seen as a fixed padding, and follow the visual
+  // viewport so the bar stays at the top of what is on screen.
+  if (native) (function () {
+    var top = document.querySelector('.top'); if (!top) return;
+    var probe = document.createElement('div');
+    probe.style.cssText = 'position:fixed;top:0;left:0;width:0;height:0;visibility:hidden;padding-top:env(safe-area-inset-top)';
+    document.documentElement.appendChild(probe);
+    var max = 0, vv = window.visualViewport;
+    function fix() {
+      var now = parseFloat(getComputedStyle(probe).paddingTop) || 0;
+      if (now > max) { max = now; top.style.paddingTop = max + 'px'; }
+      top.style.transform = vv && vv.offsetTop > 0 ? 'translateY(' + vv.offsetTop + 'px)' : '';
+    }
+    fix();
+    if (vv) { vv.addEventListener('resize', fix); vv.addEventListener('scroll', fix); }
+    window.addEventListener('orientationchange', function () { max = 0; top.style.paddingTop = ''; setTimeout(fix, 300); });
+  })();
   if ('serviceWorker' in navigator && !native && document.documentElement.hasAttribute('data-app')) {
     // Absolute path from the canonical folder: "sw.js" would resolve to /apps/sw.js without the trailing slash.
     // Skipped in the iOS app (capacitor:// origin, and build-www strips sw.js).

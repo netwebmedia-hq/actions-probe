@@ -964,7 +964,7 @@ main.wrap>.privchip:first-child{margin-top:44px}
 .hubfoot .fx a{position:relative;min-height:0;padding:6px 0}
 .hubfoot .fx a::before{content:"";position:absolute;inset:-5px 0}
 .flinks{display:grid;grid-template-columns:1fr 1fr;gap:0 16px;margin:0 0 6px}
-.flinks a{min-height:0;padding:10px 0}
+.flinks a{min-height:0;padding:12px 0}
 .flinks a:last-child:nth-child(odd){grid-column:1/-1}
 @media (min-width:640px){.flinks{display:flex;flex-wrap:wrap;gap:0 20px}}
 /* Joni r8: three short links fit on one line at any phone width, so a 3-link row is one wrap row (no lone link under a 2-column grid) */

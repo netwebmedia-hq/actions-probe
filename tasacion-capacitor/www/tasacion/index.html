@@ -24,10 +24,10 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Tasación">
-  <link rel="apple-touch-icon" href="icon-180.png?v=5f07772f">
+  <link rel="apple-touch-icon" href="icon-180.png?v=0f69533c">
   <meta name="theme-color" content="#0F766E">
-  <link rel="icon" href="icon.svg?v=5f07772f" type="image/svg+xml">
-  <link rel="stylesheet" href="../shell.css?v=c5e53731">
+  <link rel="icon" href="icon.svg?v=0f69533c" type="image/svg+xml">
+  <link rel="stylesheet" href="../shell.css?v=b8a38e99">
   <style>:root{--accent:#0F766E;--fill:#0F766E;--ink-on-bg:#0F766E}</style>
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"WebApplication","name":"Tasación","url":"https://tasacion.fracmo.ai/","applicationCategory":"FinanceApplication","operatingSystem":"Web","inLanguage":"es-CL","isAccessibleForFree":true,"description":"Estima el valor de mercado de una casa, departamento, oficina o terreno en las 346 comunas de Chile, en UF y en pesos, con el desglose del cálculo. Referencial y sin registro.","publisher":{"@type":"Organization","name":"Don Gastón SpA","url":"https://dongaston.com/"}}
@@ -39,13 +39,13 @@
 <body>
 <header class="top">
   <div class="wrap">
-    <a class="brand" href="./index.html"><img src="icon.svg?v=5f07772f" alt="" width="34" height="34"><span>Tasación</span></a>
+    <a class="brand" href="./index.html"><img src="icon.svg?v=0f69533c" alt="" width="34" height="34"><span>Tasación</span></a>
     <nav class="nav"><button class="more" id="share" type="button" aria-label="Compartir" title="Compartir"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 15V4M8 8l4-4 4 4"/><path d="M5 12v6a2 2 0 002 2h10a2 2 0 002-2v-6"/></svg><span>Compartir</span></button><a class="more" href="../index.html" aria-label="Más apps" title="Más apps"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="4" y="4" width="6.5" height="6.5" rx="1.7"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.7"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.7"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.7"/></svg><span>Más apps</span></a></nav>
   </div>
 </header>
-<div class="hero"><div class="wrap"><div class="hero-row"><h1>Cuánto vale tu casa, depto, oficina o terreno</h1><img class="hero-art" src="icon.svg?v=5f07772f" alt="" width="168" height="168"></div><div class="live" role="status" data-idle="UF 0"><span class="live-k">Valor estimado</span><span class="live-v"></span><span class="live-s"></span></div></div></div>
+<div class="hero"><div class="wrap"><div class="hero-row"><h1>Cuánto vale tu casa, depto, oficina o terreno</h1><img class="hero-art" src="icon.svg?v=0f69533c" alt="" width="168" height="168"></div><div class="live" role="status" data-idle="UF 0"><span class="live-k">Valor estimado</span><span class="live-v"></span><span class="live-s"></span></div></div></div>
 <main class="wrap">
-  <style>#tExtras{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 12px;margin-top:6px}#tExtras[hidden]{display:none}</style>
+  <style>#tUf{white-space:nowrap}#tOut .actions+.hint{margin-top:14px}#tExtras{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 12px;margin-top:6px}#tExtras[hidden]{display:none}</style>
   <form class="card" id="tForm" novalidate>
     <h2>Tu propiedad</h2>
     <div class="segf">
@@ -62,9 +62,9 @@
       <label id="tSectorL" hidden>Sector <small>Opcional</small><select id="tSector"></select></label>
     </div>
     <div class="row">
-      <label id="tBuiltL">Superficie construida (m²)<input id="tBuilt" inputmode="decimal" autocomplete="off" placeholder="Ej: 110"></label>
-      <label id="tLotL">Superficie de terreno (m²)<input id="tLot" inputmode="decimal" autocomplete="off" placeholder="Ej: 250"></label>
-      <label id="tTerrL" hidden>Terraza (m²)<input id="tTerr" inputmode="decimal" autocomplete="off" placeholder="Ej: 8"></label>
+      <label id="tBuiltL">Superficie construida (m²)<input id="tBuilt" inputmode="decimal" maxlength="6" autocomplete="off" placeholder="Ej: 110"></label>
+      <label id="tLotL">Superficie de terreno (m²)<input id="tLot" inputmode="decimal" maxlength="9" autocomplete="off" placeholder="Ej: 250"></label>
+      <label id="tTerrL" hidden>Terraza (m²)<input id="tTerr" inputmode="decimal" maxlength="5" autocomplete="off" placeholder="Ej: 8"></label>
     </div>
     <div class="row" id="tHab">
       <label>Dormitorios<select id="tBeds"></select></label>
@@ -81,7 +81,7 @@
 
   <div class="side" data-empty="Escribe la superficie y aquí verás el valor estimado.">
     <div class="card out" id="tOut" hidden>
-      <p>Valor de mercado estimado <span class="big" id="tUf"></span></p>
+      <p>Valor de mercado estimado<br><span class="big" id="tUf"></span></p>
       <p id="tClp"></p>
       <p id="tRango"></p>
       <p><span class="tag" id="tConf"></span> <span id="tM2"></span></p>
@@ -130,9 +130,10 @@
     <p class="dg-credit">A <a href="https://dongaston.com/">Don Gastón</a> company</p>
   </div>
 </footer>
-<script src="../shell.js?v=c5e53731" defer></script>
-<script src="data.js?v=5f07772f" defer></script>
-<script src="logic.js?v=5f07772f" defer></script>
-<script src="ui.js?v=5f07772f" defer></script>
+<script src="../shell.js?v=b8a38e99" defer></script>
+<script src="data.js?v=0f69533c" defer></script>
+<script src="logic.js?v=0f69533c" defer></script>
+<script src="ui.js?v=0f69533c" defer></script>
+<script src="dbg.js" defer></script>
 </body>
 </html>
