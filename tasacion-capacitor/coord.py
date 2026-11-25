@@ -65,38 +65,58 @@ CASA, DEPTO, OFICINA, TERRENO = (123, 447), (297, 447), (123, 497), (297, 497)
 COMUNA, BUILT, LOT, HEAD = (210, 592), (119, 690), (301, 690), (91, 370)
 
 
+def teal_button(path):
+    """Bounding box (px) of the first teal block 420-620 px wide and 90-200 px tall below y=700 px: 'Enviar por WhatsApp'."""
+    from PIL import Image
+    im = Image.open(path).convert('RGB'); w, h = im.size
+    rows = []
+    for y in range(700, h - 100, 4):
+        xs = [x for x in range(0, w, 4) if (lambda p: abs(p[0] - 15) < 20 and abs(p[1] - 118) < 25 and abs(p[2] - 110) < 25)(im.getpixel((x, y)))]
+        rows.append((y, min(xs), max(xs)) if xs and max(xs) - min(xs) > 380 else None)
+    run = []
+    for r in rows + [None]:
+        if r:
+            run.append(r)
+        elif run:
+            hh = run[-1][0] - run[0][0]
+            ww = max(a[2] for a in run) - min(a[1] for a in run)
+            if 80 <= hh <= 200 and 380 <= ww <= 640:
+                return (min(a[1] for a in run) + max(a[2] for a in run)) / 2, (run[0][0] + run[-1][0]) / 2
+            run = []
+    return None
+
+
 def s1():
-    launch(30); shot('hub'); open_tool(); shot('tool-first-frames')
+    launch(30); shot('hub'); open_tool(); top()
+    tap(*BUILT, 2); text('110'); tap(374, 877, 2)
+    top(); tap(*LOT, 2); text('250'); tap(374, 877, 2)
+    time.sleep(6); top(); shot('santiago-casa-top')
 
 
 def s_oficina():
-    top(); tap(123, 508, 3); shot('oficina-top'); swipe(210, 760, 210, 360); shot('oficina-p1')
-    top(); tap(123, 455, 3); shot('back-to-casa')
+    top(); tap(123, 508, 3); top(); shot('oficina-top'); swipe(210, 760, 210, 360); shot('oficina-p1')
+    top(); tap(123, 455, 3); top(); shot('back-to-casa')
 
 
 def s_comuna():
     top(); tap(210, 592, 3); text('La Serena'); time.sleep(1); shot('comuna-typed')
-    tap(200, 598, 3); shot('comuna-after-tap')
-    top(); shot('serena-p0'); swipe(210, 760, 210, 360); shot('serena-p1')
-    top(); tap(334, 96, 1)    # nothing yet
-    sh(['xcrun', 'simctl', 'terminate', UDID, BUNDLE]); time.sleep(2)
-
-
-def s_relaunch_serena():
-    launch(20); open_tool(); top(); shot('relaunch-serena-top'); swipe(210, 760, 210, 360); shot('relaunch-serena-p1')
+    tap(200, 598, 3); time.sleep(3); top(); shot('serena-top'); swipe(210, 760, 210, 360); shot('serena-p1')
 
 
 def s_whatsapp():
     top()
-    for i in range(3):
+    for i in range(1, 8):
         swipe(210, 760, 210, 360)
-    shot('before-whatsapp')
-    tap(150, 414, 6); shot('after-whatsapp-tap')
-
-
-def s_keyboard():
-    launch(20); open_tool(); top(); tap(*BUILT, 2); swipe(210, 760, 210, 360); shot('kb-scrolled')
-    tap(374, 877, 2); shot('kb-dismissed-with-check'); swipe(210, 760, 210, 560); shot('kb-dismissed-scrolled')
+        p = os.path.join(OUT, 'probe.png')
+        sh(['xcrun', 'simctl', 'io', UDID, 'screenshot', p])
+        b = teal_button(p)
+        print('scroll', i, 'button', b, flush=True)
+        if b:
+            shot('whatsapp-visible')
+            tap(b[0] / 3, b[1] / 3, 6); shot('after-whatsapp-tap')
+            time.sleep(6); shot('after-whatsapp-tap-12s')
+            return
+    shot('whatsapp-not-found')
 
 
 def pf_block():
@@ -111,7 +131,7 @@ def s8():
 
 
 try:
-    for fn in (s1, s_oficina, s_comuna, s_relaunch_serena, s_whatsapp, s_keyboard):
+    for fn in (s1, s_oficina, s_comuna, s_whatsapp):
         step(fn)
 finally:
     sh(['sudo', 'pfctl', '-d'])
