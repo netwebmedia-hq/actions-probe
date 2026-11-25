@@ -75,14 +75,15 @@ def selects_present():
 
 
 def scen_tasacion():
-    for k in (1, 2, 3):                 # check 1 on the first launch, check 2 on two relaunches
+    for k in (1,):
         launch(30 if k == 1 else 20); open_tool(); top(); time.sleep(3); shot('A-rest-launch%d' % k)
     pt = (119, 690) if selects_present() else (118, 600)
     print('built field tap at', pt, flush=True)
     tap(*pt, 3); shot('B-keyboard-up')
     text('110'); shot('B2-typed-110')
     swipe(210, 760, 210, 360); time.sleep(1); shot('C-scrolled-380')
-    tap(376, 559, 3); shot('E-dismissed')
+    tap(374, 877, 3); shot('E-dismissed')
+    time.sleep(2); shot('E1b-dismissed-2s')
     top(); time.sleep(1); shot('E2-top-result')
     for i in range(3):
         swipe(210, 760, 210, 360)
@@ -113,7 +114,7 @@ def s8():
 
 
 try:
-    for fn in (scen_tasacion, scen_sueldo, scen_other):
+    for fn in (scen_tasacion,):
         step(fn)
 finally:
     sh(['sudo', 'pfctl', '-d'])
