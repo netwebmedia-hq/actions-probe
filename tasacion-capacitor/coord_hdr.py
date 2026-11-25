@@ -82,7 +82,7 @@ def scen_tasacion():
     swipe(210, 760, 210, 360); time.sleep(1); shot('C-scrolled-380')
     swipe(210, 760, 210, 360); time.sleep(1); shot('D1-scrolled-760')
     top(); time.sleep(1); shot('D2-back-to-top')
-    tap(374, 877, 3); shot('E-dismissed')
+    tap(376, 559, 3); shot('E-dismissed')
     top(); shot('E2-dismissed-top')
 
 
@@ -91,7 +91,7 @@ def scen_sueldo():
     tap(209, 543, 3); shot('F1-sueldo-keyboard-up')
     swipe(210, 760, 210, 360); time.sleep(1); shot('F2-sueldo-scrolled-380')
     swipe(210, 760, 210, 560); time.sleep(1); shot('F3-sueldo-scrolled-more')
-    tap(374, 877, 3); shot('F4-sueldo-dismissed')
+    tap(376, 559, 3); shot('F4-sueldo-dismissed')
 
 
 def pf_block():
