@@ -52,7 +52,7 @@ jobs:
         run: |
           brew tap facebook/fb
           brew trust facebook/fb || true
-          brew install idb-companion
+          brew install idb-companion || { sleep 20; brew install idb-companion; }
           python3 -m venv venv
           venv/bin/pip install --quiet fb-idb pillow
           echo "$PWD/venv/bin" >> "$GITHUB_PATH"
