@@ -70,7 +70,7 @@ jobs:
           xcrun simctl install "$UDID" $APP
 
       - name: Drive the app
-        run: python3 tasacion-capacitor/drive.py "$UDID" "$(cat tasacion-capacitor/bundle-id.txt)"
+        run: python3 tasacion-capacitor/explore.py "$UDID" "$(cat tasacion-capacitor/bundle-id.txt)"
 
       - name: Network back on
         if: always()
