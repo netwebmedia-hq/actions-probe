@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="es-CL" data-app="auto-al-dia">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://netwebmedia.com https://dongaston.com; form-action 'none'">
+  <title>Revisión técnica, permiso y SOAP de tu auto | Auto al Día</title>
+  <meta name="description" content="Calcula cuándo vence la revisión técnica, el permiso de circulación y el SOAP de tu auto con solo la patente. Avisos en tu calendario, gratis y sin registro.">
+  <link rel="canonical" href="https://auto-al-dia.fracmo.ai/">
+  <meta name="robots" content="index, follow">
+  <meta property="og:site_name" content="Auto al Día">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="es_CL">
+  <meta property="og:title" content="Auto al Día: Revisión técnica, permiso de circulación y SOAP sin olvidos">
+  <meta property="og:description" content="Anota la patente de tu auto y mira cuándo vencen la revisión técnica, el permiso de circulación y el SOAP. Te dice cuántos días quedan y deja un aviso en tu calendario. Gratis y sin registro.">
+  <meta property="og:url" content="https://auto-al-dia.fracmo.ai/">
+  <meta property="og:image" content="https://auto-al-dia.fracmo.ai/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:image" content="https://auto-al-dia.fracmo.ai/og.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="color-scheme" content="light dark">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Auto al Día">
+  <link rel="apple-touch-icon" href="icon-180.png?v=15bee08e">
+  <meta name="theme-color" content="#164E63">
+  <link rel="icon" href="icon.svg?v=15bee08e" type="image/svg+xml">
+  <link rel="stylesheet" href="../shell.css?v=b8a38e99">
+  <style>:root{--accent:#164E63;--fill:#164E63;--ink-on-bg:#164E63}</style>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"WebApplication","name":"Auto al Día","url":"https://auto-al-dia.fracmo.ai/","applicationCategory":"UtilitiesApplication","operatingSystem":"Web","inLanguage":"es-CL","isAccessibleForFree":true,"description":"Anota la patente de tu auto y mira cuándo vencen la revisión técnica, el permiso de circulación y el SOAP. Te dice cuántos días quedan y deja un aviso en tu calendario. Gratis y sin registro.","publisher":{"@type":"Organization","name":"Don Gastón SpA","url":"https://dongaston.com/"}}
+  </script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"¿Cuándo me toca la revisión técnica?","acceptedAnswer":{"@type":"Answer","text":"El mes de preferencia depende del último dígito de tu patente: 9 enero, 0 febrero, 1 abril, 2 mayo, 3 junio, 4 julio, 5 agosto, 6 septiembre, 7 octubre y 8 noviembre. Aplica a autos y camionetas particulares."}},{"@type":"Question","name":"¿Cuándo vence el permiso de circulación?","acceptedAnswer":{"@type":"Answer","text":"El permiso de circulación vence el 31 de marzo. La segunda cuota vence el 31 de agosto."}},{"@type":"Question","name":"¿Necesito SOAP para pagar el permiso de circulación?","acceptedAnswer":{"@type":"Answer","text":"Sí, el SOAP se necesita para pagar el permiso de circulación. Por eso conviene tenerlo listo antes."}},{"@type":"Question","name":"¿Puedo guardar los vencimientos en el calendario del teléfono?","acceptedAnswer":{"@type":"Answer","text":"Sí, la herramienta te permite agregar los vencimientos al calendario de tu teléfono para que no se te pasen."}}]}
+  </script>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="./index.html"><img src="icon.svg?v=15bee08e" alt="" width="34" height="34"><span>Auto al Día</span></a>
+    <nav class="nav"><button class="more" id="share" type="button" aria-label="Compartir" title="Compartir"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 15V4M8 8l4-4 4 4"/><path d="M5 12v6a2 2 0 002 2h10a2 2 0 002-2v-6"/></svg><span>Compartir</span></button><a class="more" href="../index.html" aria-label="Más apps" title="Más apps"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="4" y="4" width="6.5" height="6.5" rx="1.7"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.7"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.7"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.7"/></svg><span>Más apps</span></a></nav>
+  </div>
+</header>
+<div class="hero"><div class="wrap"><div class="hero-row"><h1>Revisión técnica, permiso de circulación y SOAP sin olvidos</h1><img class="hero-art" src="icon.svg?v=15bee08e" alt="" width="168" height="168"></div><svg class="scene" viewBox="0 0 360 100" aria-hidden="true" focusable="false"><defs><clipPath id="adc"><rect width="360" height="100" rx="18"/></clipPath><linearGradient id="adg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0B3A4A"/><stop offset=".4" stop-color="#2A8A93"/><stop offset=".64" stop-color="#FDBA74"/></linearGradient></defs><g clip-path="url(#adc)"><rect width="360" height="100" fill="url(#adg)"/><circle cx="64" cy="64" r="19" fill="#FDE047"/><circle cx="64" cy="64" r="29" fill="#FDE047" opacity=".22"/><g fill="#fff" opacity=".8"><circle cx="22" cy="14" r="1.4"/><circle cx="110" cy="10" r="1.2"/><circle cx="196" cy="18" r="1.4"/></g>
+<path d="M0 67q40-8 82-3t96-2q50-6 100 2t82 1v13H0z" fill="#0F3D4C"/><rect y="68" width="360" height="5" fill="#0F766E"/><rect y="73" width="360" height="27" fill="#1F2937"/><rect y="73" width="360" height="2" fill="#fff" opacity=".25"/><path class="ad-road" d="M-4 88H364" stroke="#fff" stroke-width="2.4" stroke-dasharray="16 14" stroke-linecap="round" opacity=".85"/>
+<g stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".5" class="ad-speed"><path d="M222 54h22M230 64h22M224 74h16"/></g>
+<g class="ad-car"><g transform="translate(150 51) scale(.3) translate(-250 -296)"><path d="M60 340v-50a28 28 0 0124-28l54-8 46-70a32 32 0 0127-14h100a32 32 0 0126 13l56 73 32 6a28 28 0 0123 28v50a14 14 0 01-14 14H74a14 14 0 01-14-14z" fill="#fff"/><path d="M196 252l36-54h46v54zM300 198h12a10 10 0 018 4l38 50h-58z" fill="#164E63"/><circle cx="160" cy="356" r="50" fill="#082F3D"/><circle cx="160" cy="356" r="20" fill="#CBD5E1"/><circle cx="356" cy="356" r="50" fill="#082F3D"/><circle cx="356" cy="356" r="20" fill="#CBD5E1"/></g>
+<rect x="195" y="62" width="36" height="17" rx="2.6" fill="#fff" stroke="#111" stroke-width="1.2"/><text x="213" y="67.6" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="3.6" letter-spacing=".5" fill="#111">CHILE</text><text id="adPlate" x="213" y="76.2" text-anchor="middle" font-family="ui-monospace,Consolas,monospace" font-weight="800" font-size="8.4" letter-spacing=".4" fill="#111">BBCL·12</text></g>
+<g transform="rotate(3 296 40)"><rect x="294" y="42" width="4" height="40" fill="#94A3B8"/><rect x="266" y="10" width="60" height="50" rx="8" fill="#000" opacity=".18" transform="translate(2 3)"/><rect x="266" y="10" width="60" height="50" rx="8" fill="#fff"/><path d="M266 18a8 8 0 018-8h44a8 8 0 018 8v8h-60z" fill="#DC2626"/><circle cx="280" cy="10" r="2.6" fill="#1F2937"/><circle cx="312" cy="10" r="2.6" fill="#1F2937"/><g fill="#CBD5E1"><rect x="272" y="31" width="9" height="6" rx="2"/><rect x="285" y="31" width="9" height="6" rx="2"/><rect x="298" y="31" width="9" height="6" rx="2"/><rect x="311" y="31" width="9" height="6" rx="2"/><rect x="272" y="40" width="9" height="6" rx="2"/><rect x="285" y="40" width="9" height="6" rx="2"/><rect x="311" y="40" width="9" height="6" rx="2"/><rect x="272" y="49" width="9" height="6" rx="2"/><rect x="285" y="49" width="9" height="6" rx="2"/></g><rect x="298" y="40" width="9" height="6" rx="2" fill="#FDE047"/><circle cx="316" cy="54" r="11" fill="#fff"/><circle cx="316" cy="54" r="8.6" fill="#16A34A"/><path d="M312 54.4l3 3 5.6-6.8" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></g></g></svg>
+<div class="live" role="status" data-idle="Agrega tu auto"><span class="live-k">Próximo plazo</span><span class="live-v"></span><span class="live-s"></span><button class="live-act" id="liveDone" type="button" hidden>Ya lo hice</button></div></div></div>
+<main class="wrap">
+  <style>
+    .tag.warn{background:#FEF3C7;color:#92400E}
+  </style>
+  <section class="card">
+    <h2>Agrega tu vehículo</h2>
+    <form id="fVeh" class="row">
+      <label>Patente<input id="vPat" class="plate-in" autocomplete="off" autocapitalize="characters" maxlength="10" placeholder="BBCL · 12" required></label>
+      <label>Apodo (opcional)<input id="vApodo" autocomplete="off" maxlength="30" placeholder="El Mazda"></label>
+      <div class="actions"><button class="btn" type="submit">Agregar</button></div>
+    </form>
+    <p id="vMsg" class="bad" role="alert"></p>
+    <p class="exrow" id="exRow"><button class="btn sec small" id="demoBtn" type="button">Probar con una patente de ejemplo</button><span class="hint" id="exHint">Mira cómo se ven los plazos.</span></p>
+    <p class="demonote" id="demoNote" hidden><span>Estás viendo un ejemplo.</span> <button class="lnk" id="demoClear" type="button">Borrar y empezar con lo mío</button></p>
+    <p class="hint">Autos, station wagons y camionetas particulares. Los plazos de este año que ya pasaron aparecen como vencidos: si ya los pagaste, toca "Ya lo hice".</p>
+  </section>
+
+  <div class="side wide" data-empty="Agrega tu patente y aquí aparecen tus vencimientos." id="vehiculos"></div>
+
+  <p class="local src"><span class="src-in"><span class="ln">Fuente: ChileAtiende, revisado el 16-11-2026. <a href="https://www.chileatiende.gob.cl/fichas/23978-revision-tecnica-de-vehiculos-motorizados" target="_blank" rel="noopener">Ver fuente</a></span><span class="ln">Revisión según el último dígito de la patente; permiso y SOAP hasta el 31 de marzo. Referencial: confirma en tu municipalidad y certificado.</span></span></p>
+
+  <section class="card">
+    <h2>Kit de seguridad para el auto</h2>
+    <p class="hint">Para tenerlo a mano en un pinchazo o una panne en la carretera.</p>
+    <ul class="list">
+      <li><a href="https://meli.la/2SQFp5d" target="_blank" rel="sponsored nofollow noopener">Chaleco reflectante</a></li>
+      <li><a href="https://meli.la/1YGpcTC" target="_blank" rel="sponsored nofollow noopener">Triángulos de seguridad</a></li>
+      <li><a href="https://meli.la/11un8JY" target="_blank" rel="sponsored nofollow noopener">Botiquín para el auto</a></li>
+      <li><a href="https://meli.la/33ii9Z5" target="_blank" rel="sponsored nofollow noopener">Extintor para el auto</a></li>
+    </ul>
+    <p class="hint">Enlaces de afiliado de Mercado Libre: si compras a través de ellos, Auto al Día puede recibir una pequeña comisión, sin costo adicional para ti. No cambia tus plazos ni tus recordatorios.</p>
+  </section>
+
+  <div class="below">
+  <section class="card faq noprint">
+    <h2>Preguntas frecuentes</h2>
+    <details><summary>¿Cuándo me toca la revisión técnica?</summary><p>El mes de preferencia depende del último dígito de tu patente: 9 enero, 0 febrero, 1 abril, 2 mayo, 3 junio, 4 julio, 5 agosto, 6 septiembre, 7 octubre y 8 noviembre. Aplica a autos y camionetas particulares.</p></details>
+    <details><summary>¿Cuándo vence el permiso de circulación?</summary><p>El permiso de circulación vence el 31 de marzo. La segunda cuota vence el 31 de agosto.</p></details>
+    <details><summary>¿Necesito SOAP para pagar el permiso de circulación?</summary><p>Sí, el SOAP se necesita para pagar el permiso de circulación. Por eso conviene tenerlo listo antes.</p></details>
+    <details><summary>¿Puedo guardar los vencimientos en el calendario del teléfono?</summary><p>Sí, la herramienta te permite agregar los vencimientos al calendario de tu teléfono para que no se te pasen.</p></details>
+  </section>
+  </div>
+  <section class="others noprint">
+    <h2>Más apps gratis</h2>
+    <div class="strip">
+      <a href="../boleta-honorarios/index.html"><img src="../boleta-honorarios/icon.svg?v=f29785e6" alt="" width="44" height="44" loading="lazy">Boleta Fácil</a>
+      <a href="../cotizador/index.html"><img src="../cotizador/icon.svg?v=65e77e67" alt="" width="44" height="44" loading="lazy">Cotiza Fácil</a>
+      <a href="../farmacia-de-turno/index.html"><img src="../farmacia-de-turno/icon.svg?v=c72461da" alt="" width="44" height="44" loading="lazy">Farmacia de Turno</a>
+      <a href="../gastos-comunes/index.html"><img src="../gastos-comunes/icon.svg?v=85e6d767" alt="" width="44" height="44" loading="lazy">Gastos Comunes</a>
+      <a href="../libreta-fiados/index.html"><img src="../libreta-fiados/icon.svg?v=95e91e36" alt="" width="44" height="44" loading="lazy">Libreta de Fiados</a>
+      <a href="../pension-alimentos/index.html"><img src="../pension-alimentos/icon.svg?v=7b6941d0" alt="" width="44" height="44" loading="lazy">Pensión de Alimentos</a>
+      <a href="../reajuste-arriendo/index.html"><img src="../reajuste-arriendo/icon.svg?v=c84f5634" alt="" width="44" height="44" loading="lazy">Reajuste Arriendo</a>
+      <a href="../sueldo-liquido/index.html"><img src="../sueldo-liquido/icon.svg?v=0adc694d" alt="" width="44" height="44" loading="lazy">Sueldo Líquido</a>
+      <a href="../tasacion/index.html"><img src="../tasacion/icon.svg?v=45100cb4" alt="" width="44" height="44" loading="lazy">Tasación</a>
+      <a href="../vaquita/index.html"><img src="../vaquita/icon.svg?v=41f14c45" alt="" width="44" height="44" loading="lazy">Vaquita</a>
+    </div>
+  </section>
+  <p class="local"><span>Lo que escribes se guarda solo en este teléfono. <button class="lnk noprint" type="button" id="bkOut">Guardar respaldo</button> · <button class="lnk noprint" type="button" id="bkIn">Restaurar respaldo</button><input type="file" id="bkFile" accept="application/json,.json" hidden> <span id="bkMsg" class="bad" role="alert"></span></span></p>
+</main>
+<footer class="foot">
+  <div class="wrap">
+    <p>Auto al Día es un servicio de Don Gastón SpA, RUT 78.493.794-1. Herramienta informativa y gratuita: los resultados son referenciales y no reemplazan asesoría profesional.</p>
+    <nav class="flinks" aria-label="Enlaces del sitio"><a href="mailto:carlos@netwebmedia.com">carlos@netwebmedia.com</a><a href="https://dongaston.com/privacidad.html">Privacidad</a><a href="https://www.youtube.com/@appsparachile" rel="me noopener" target="_blank">YouTube</a></nav>
+    <p class="dg-credit">A <a href="https://dongaston.com/">Don Gastón</a> company</p>
+  </div>
+</footer>
+<script src="../shell.js?v=b8a38e99" defer></script>
+<script src="logic.js?v=15bee08e" defer></script>
+<script src="ui.js?v=15bee08e" defer></script>
+</body>
+</html>
