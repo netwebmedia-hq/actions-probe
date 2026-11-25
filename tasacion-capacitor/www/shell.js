@@ -281,7 +281,9 @@
       if (now > max) { max = now; top.style.paddingTop = max + 'px'; }
       top.style.transform = vv && vv.offsetTop > 0 ? 'translateY(' + vv.offsetTop + 'px)' : '';
     }
-    fix();
+    // First run after load, not here: reading a computed style now would lay the page out before the
+    // tool's own script has filled its fields.
+    window.addEventListener('load', fix);
     if (vv) { vv.addEventListener('resize', fix); vv.addEventListener('scroll', fix); }
     window.addEventListener('orientationchange', function () { max = 0; top.style.paddingTop = ''; setTimeout(fix, 300); });
   })();

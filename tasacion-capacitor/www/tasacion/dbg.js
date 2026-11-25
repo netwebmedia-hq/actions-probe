@@ -18,7 +18,7 @@
         'pp ' + getComputedStyle(pr).paddingTop,
         'ht ' + (r ? f(r.top) : '-'), 'hh ' + (r ? f(r.height) : '-'),
         'hpt ' + (cs ? cs.paddingTop : '-'), 'htr ' + (cs ? cs.transform : '-'),
-        'cmh ' + (cm ? f(cm.getBoundingClientRect().height) : '-'), 'cmo ' + (cm ? cm.options.length : '-'), 'cmp ' + (cm ? getComputedStyle(cm.parentElement).display : '-')
+        'cmh ' + (cm ? f(cm.getBoundingClientRect().height) : '-'), 'cmo ' + (cm ? cm.options.length : '-'), 'sel ' + ['tComuna','tBeds','tBaths','tPark','tEstado'].map(function (id) { var e = document.getElementById(id); return e ? getComputedStyle(e.parentElement).display.charAt(0) : '-'; }).join(' ')
       ].join('\n');
     }, 300);
   } catch (e) {}

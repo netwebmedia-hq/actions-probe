@@ -75,23 +75,30 @@ def selects_present():
 
 
 def scen_tasacion():
-    launch(30); shot('A-hub'); open_tool(); top(); time.sleep(3); shot('A-rest')
+    for k in (1, 2, 3):                 # check 1 on the first launch, check 2 on two relaunches
+        launch(30 if k == 1 else 20); open_tool(); top(); time.sleep(3); shot('A-rest-launch%d' % k)
     pt = (119, 690) if selects_present() else (118, 600)
     print('built field tap at', pt, flush=True)
     tap(*pt, 3); shot('B-keyboard-up')
+    text('110'); shot('B2-typed-110')
     swipe(210, 760, 210, 360); time.sleep(1); shot('C-scrolled-380')
-    swipe(210, 760, 210, 360); time.sleep(1); shot('D1-scrolled-760')
-    top(); time.sleep(1); shot('D2-back-to-top')
     tap(376, 559, 3); shot('E-dismissed')
-    top(); shot('E2-dismissed-top')
+    top(); time.sleep(1); shot('E2-top-result')
+    for i in range(3):
+        swipe(210, 760, 210, 360)
+    shot('E3-result-card')
 
 
 def scen_sueldo():
     launch(25); tap(210, 572, 7); shot('F0-sueldo-open')
     tap(209, 543, 3); shot('F1-sueldo-keyboard-up')
     swipe(210, 760, 210, 360); time.sleep(1); shot('F2-sueldo-scrolled-380')
-    swipe(210, 760, 210, 560); time.sleep(1); shot('F3-sueldo-scrolled-more')
     tap(376, 559, 3); shot('F4-sueldo-dismissed')
+
+
+def scen_other():
+    launch(25); tap(210, 287, 7); shot('G0-cotiza-open')
+    swipe(210, 760, 210, 460); time.sleep(1); shot('G1-cotiza-scrolled')
 
 
 def pf_block():
@@ -106,7 +113,7 @@ def s8():
 
 
 try:
-    for fn in (scen_tasacion, scen_sueldo):
+    for fn in (scen_tasacion, scen_sueldo, scen_other):
         step(fn)
 finally:
     sh(['sudo', 'pfctl', '-d'])

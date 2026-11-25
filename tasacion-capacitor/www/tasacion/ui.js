@@ -19,6 +19,9 @@
   function tipo() { var r = document.querySelector('input[name="tTipo"]:checked'); return r ? r.value : 'casa'; }
 
   /* ---- fields that do not depend on the type ---- */
+  // Each select ships with one empty option and is refilled here: the shell hides a label whose select is
+  // :empty, and iOS WebKit kept such a label hidden after the options arrived (seen in the app shell).
+  ['#tComuna', '#tBeds', '#tBaths', '#tPark', '#tBod', '#tEstado'].forEach(function (id) { $(id).textContent = ''; });
   L.comunaOptions().forEach(function (g) {
     var og = document.createElement('optgroup'); og.label = g.region;
     g.comunas.forEach(function (c) { og.appendChild(opt(c.value, c.label)); });
