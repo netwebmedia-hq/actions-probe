@@ -86,10 +86,27 @@ def teal_button(path):
     return None
 
 
+def has_text(box):
+    from PIL import Image
+    p = os.path.join(OUT, 'probe.png')
+    sh(['xcrun', 'simctl', 'io', UDID, 'screenshot', p])
+    im = Image.open(p).convert('L').crop(box)
+    return sum(1 for v in im.getdata() if v < 110) > 150
+
+
+def fill(pt, value, box):
+    for k in range(4):
+        top(); tap(*pt, 3); text(value); time.sleep(1.5)
+        if has_text(box):
+            tap(374, 877, 2); return k + 1
+        tap(374, 877, 2)
+    return 0
+
+
 def s1():
     launch(30); shot('hub'); open_tool(); top()
-    tap(*BUILT, 2); text('110'); tap(374, 877, 2)
-    top(); tap(*LOT, 2); text('250'); tap(374, 877, 2)
+    print('built tries', fill(BUILT, '110', (105, 2010, 600, 2130)), flush=True)
+    print('lot tries', fill(LOT, '250', (700, 2010, 1150, 2130)), flush=True)
     time.sleep(6); top(); shot('santiago-casa-top')
 
 
