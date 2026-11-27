@@ -1,0 +1,29 @@
+name: markers
+# Live marker check from a GitHub runner (use when this PC's IP is blocked by the InMotion firewall).
+# checks: newline-separated "URL|marker|expect" lines; expect = 1 (must appear) or 0 (must not appear).
+on:
+  workflow_dispatch:
+    inputs:
+      checks:
+        description: 'URL|marker|expect lines'
+        required: true
+jobs:
+  markers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - env:
+          CHECKS: ${{ inputs.checks }}
+        run: |
+          UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+          fail=0
+          while IFS='|' read -r url marker expect; do
+            [ -z "$url" ] && continue
+            body=$(curl -s -m 20 -A "$UA" "$url?cb=$RANDOM$RANDOM") || body=""
+            n=$(printf '%s' "$body" | grep -c -F -- "$marker" || true)
+            got=$([ "$n" -gt 0 ] && echo 1 || echo 0)
+            [ "$got" = "$expect" ] && r=PASS || { r=FAIL; fail=1; }
+            echo "$r expect=$expect found=$n $url :: $marker"
+            sleep 1
+          done <<< "$CHECKS"
+          exit $fail
