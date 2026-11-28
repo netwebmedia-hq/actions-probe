@@ -20,6 +20,10 @@ on:
         description: 'Runner label; xcode-27 = iOS 27 SDK (App Store requires it from April 2027)'
         required: false
         default: 'xcode-27'
+      prebuilt:
+        description: 'true = the bundle already holds the built web app (www/); skip npm run build'
+        required: false
+        default: 'false'
 
 permissions:
   contents: read
@@ -51,11 +55,14 @@ jobs:
           node-version: '22'
 
       - name: Web bundle and native sync
+        env:
+          PREBUILT: ${{ inputs.prebuilt }}
         run: |
           set -euo pipefail
           cd "$APP_DIR"
           npm ci --silent
-          npm run build --silent > /dev/null
+          if [ "$PREBUILT" = "true" ]; then test -f www/index.html || { echo "::error::prebuilt bundle has no www/index.html"; exit 1; }
+          else npm run build --silent > /dev/null; fi
           npx cap sync ios > /dev/null
           cd ios/App && pod install --silent
 
