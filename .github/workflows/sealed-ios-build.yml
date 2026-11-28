@@ -61,7 +61,7 @@ jobs:
           set -euo pipefail
           cd "$APP_DIR"
           npm ci --silent
-          if [ "$PREBUILT" = "true" ]; then ls www/index.html dist/index.html >/dev/null 2>&1 || { echo "::error::prebuilt bundle has no built web app (www/ or dist/)"; exit 1; }
+          if [ "$PREBUILT" = "true" ]; then { [ -f www/index.html ] || [ -f dist/index.html ]; } || { echo "::error::prebuilt bundle has no built web app (www/ or dist/)"; exit 1; }
           else npm run build --silent > /dev/null; fi
           npx cap sync ios > /dev/null
           cd ios/App && pod install --silent
