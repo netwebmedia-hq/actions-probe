@@ -21,7 +21,7 @@ on:
         required: false
         default: 'xcode-27'
       prebuilt:
-        description: 'true = the bundle already holds the built web app (www/); skip npm run build'
+        description: 'true = the bundle already holds the built web app (www/ or dist/); skip npm run build'
         required: false
         default: 'false'
 
@@ -61,7 +61,7 @@ jobs:
           set -euo pipefail
           cd "$APP_DIR"
           npm ci --silent
-          if [ "$PREBUILT" = "true" ]; then test -f www/index.html || { echo "::error::prebuilt bundle has no www/index.html"; exit 1; }
+          if [ "$PREBUILT" = "true" ]; then ls www/index.html dist/index.html >/dev/null 2>&1 || { echo "::error::prebuilt bundle has no built web app (www/ or dist/)"; exit 1; }
           else npm run build --silent > /dev/null; fi
           npx cap sync ios > /dev/null
           cd ios/App && pod install --silent
