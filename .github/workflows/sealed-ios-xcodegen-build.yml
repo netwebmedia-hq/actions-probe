@@ -1,4 +1,5 @@
 name: Sealed iOS build (xcodegen)
+run-name: "Sealed iOS build (xcodegen) ${{ inputs.tag }}"
 
 # Builds an unsigned native (xcodegen project.yml) iOS app from an encrypted source bundle attached to a release,
 # and returns the result encrypted. Nothing readable is stored in this repo or its logs.
